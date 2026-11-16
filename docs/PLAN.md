@@ -96,6 +96,23 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Layout | **Desktop-first, mobile-friendly** (responsive; playable as a PWA on phones) |
 | Notifications | Browser/desktop notifications: level up, bag full, workers paused, farm plot ready, death, queue finished |
 
+### 1.8 Phase 1 decisions (skilling, workers, Town)
+| Area | Decision |
+|---|---|
+| Character creation | Name + mode (Standard / Hardcore / Mortal) + class. The class is stored now and takes effect when combat and the tree arrive |
+| Character slots | **Unlimited.** Each character catches up its own offline time when loaded |
+| Material names | Familiar real-world names for low tiers, original fantasy names for high tiers |
+| Tiers | **10 tiers per gathering skill** (levels 1, 10, 20 … 90); 2 more come with levels 100–120 |
+| Action speed | **Longer actions: ~5s at tier 1 → ~12s at tier 10**; higher tiers give much more XP and value |
+| Skill twists | Mining: rocks hold limited ore, then respawn. Fishing: weighted catch tables per spot. Herbalism: random herb bundles. Woodcutting: steady |
+| Rare finds | Small per-skill rare tables: Mining → gem fragments, Woodcutting → seed pods, Herbalism → wild seeds, Fishing → sunken caches (gold + materials) |
+| Thieving | **10 targets.** Stealth (level + mastery) vs perception. Failure = 3s stun (life loss added in Phase 4) |
+| Mastery pool | **Melvor-style, spendable:** actions feed the pool; pool % unlocks bonuses; pool XP can be spent to level a chosen action's mastery |
+| Bank | **Limited slots** (~40 to start; Vault adds more). A full bank discards *new* item types; existing stacks keep growing. Search & sort, item lock, sell-quantity picker, **custom tabs** |
+| Worker efficiency | Applied as **slower actions** (30% efficiency → 3.3× action time), normal results per action |
+| Worker wages | Paid as gold per hour (charged per action cycle). Wage ≈ **120% of the vendor value of the worker's output**, so workers never become a gold machine; Workshop tiers bring it toward break-even |
+| Town (Phase 1) | Guild Hall (worker slots), Workshop (efficiency + wage), Training Yard (worker XP share), Vault (bank slots). Costs are **gold + gathered materials** |
+
 ---
 
 ## 2. Classes
