@@ -32,6 +32,7 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Trade | SSF only; NPC Exchange + vendor recipes |
 | Softcore death | Lose a % of current-level XP + the trip bag contents since the last bank |
 | Level caps | Character 1–100. Skills 1–99 at launch, then **99 → 120** unlocked through Atlas progress |
+| XP curves | Classic idle exponential curve for skills (each level ~10% more XP; 99 ≈ 13M XP, halfway at ~92). Steeper curve for character levels (90→100 takes about as long as 1→90) |
 | Completion | Completion log (items, monsters, uniques, mastery, maps). **No gameplay bonuses** |
 
 ### 1.3 Skilling and workers
@@ -68,9 +69,9 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Classes | 6 classes, one per tree start: **Ironclad** (Str), **Vanguard** (Str/Dex), **Skirmisher** (Dex), **Adept** (Dex/Int), **Arcanist** (Int), **Zealot** (Int/Str) |
 | Weapons | 2 weapon types per class, **soft lock**: any weapon can be used, but the start area, ascendancies and starting gems favour the class's two |
 | Ascendancies | 4 per class (24 total). **Picked at the first trial**; swapping costs gold + re-running a trial |
-| Passive tree | PoE2-style shared tree, **~1,500 nodes, 100 points total**. Attribute-choice nodes, notables, **keystones, choice notables (pick 1 of 3), cluster-style jewels, timeless-style jewels** |
+| Passive tree | PoE2-style shared tree, **~1,500 nodes, 99 points** (1 per level-up, none from the campaign). Attribute-choice nodes, notables, **keystones, choice notables (pick 1 of 3), cluster-style jewels, timeless-style jewels** |
 | Respec | Gold per refunded point, scaling with level; a full reset costs a rare **Unmaking Shard** |
-| Gems | Uncut gems drop → **Gemcutting** turns each into a chosen skill/support/spirit gem, and raises its level, quality and support slots (up to 5). Minion gem upgrades also come from Gemcutting |
+| Gems | Uncut gems drop → **Gemcutting** turns each into a chosen skill/support/spirit gem, and raises its level, quality and support slots. **5 gem tiers** (by act/Atlas tier); a newly cut skill has 2 support slots, gaining a 3rd at gem level 8, a 4th at 14, and a 5th at 20. Minion gem upgrades also come from Gemcutting |
 | Support limits | **Each support gem may be socketed once per character** (across all skills) |
 | Gear slots | Main hand, off hand, helmet, body, gloves, boots, belt, amulet, 2 rings, 5 flasks; jewels in tree sockets |
 | Items | Random prefix/suffix affixes with tiers gated by item level; Normal/Magic/Rare/Unique; crafting via skills (artisan skill makes the base, **Enchanting** adds or rerolls mods) |
@@ -99,14 +100,14 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 
 ## 2. Classes
 
-| Start | Class | Weapon types | Ascendancy directions (4 each — names TBD in Phase 7) |
+| Start | Class | Weapon types | Ascendancy themes (confirmed — names TBD in Phase 7) |
 |---|---|---|---|
-| Str | **Ironclad** | Maces, Axes | unbreakable tank · berserk rage · slam/tremor · warcry/banner |
-| Str/Dex | **Vanguard** | Swords, Crossbows | bleed duelist · bolt artillery · armour-break · dual-wield tempo |
-| Dex | **Skirmisher** | Bows, Daggers | crit assassin · poison · traps/ambush · beast companion (minion) |
-| Dex/Int | **Adept** | Quarterstaves, Claws | combo/finisher · elemental fists · evasion/ES hybrid · charge stacker |
-| Int | **Arcanist** | Staves, Wands | fire/ignite · cold/freeze · lightning/shock · arcane (mana/ES) |
-| Int/Str | **Zealot** | Sceptres, Flails | necromantic minions · aura/Spirit stacker · chaos DoT · holy guardian |
+| Str | **Ironclad** | Maces, Axes | unbreakable tank · berserk rage · slams & tremors · warcry commander |
+| Str/Dex | **Vanguard** | Swords, Crossbows | bleed duelist · bolt artillery · armour breaker · dual-wield tempo |
+| Dex | **Skirmisher** | Bows, Daggers | crit assassin · poison master · traps & ambush · beast companion (minion) |
+| Dex/Int | **Adept** | Quarterstaves, Claws | combo master · elemental fists · evasion/ES hybrid · charge stacker |
+| Int | **Arcanist** | Staves, Wands | pyromancer · cryomancer · stormcaller · arcane scholar |
+| Int/Str | **Zealot** | Sceptres, Flails | necromancer · aura/Spirit stacker · chaos DoT · holy guardian |
 
 ---
 
@@ -117,22 +118,22 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 Every skill has levels 1–99 (→ 120 later), per-action mastery, and a mastery pool. All skills are per character.
 
 - **Mining:** ores and gem fragments. **Woodcutting:** logs and resins. **Herbalism:** wild herbs and reagents. **Fishing:** fish for Cooking, oils for Alchemy and Enchanting.
-- **Smithing:** armour and metal weapon bases. **Tailoring:** leather and cloth bases (evasion/ES). **Woodworking:** bows, staves, quivers, shields. **Jewelcrafting:** rings, amulets, jewels (including cluster jewels at high level).
-- **Alchemy:** flasks, flask affixes, flask upgrades. **Cooking:** meals that grant timed buffs (one meal active at a time).
+- **Smithing:** armour and metal weapon bases. **Tailoring:** leather and cloth bases (evasion/ES). **Woodworking:** bows, staves, quivers, shields. **Jewelcrafting:** rings, amulets, jewels, including cluster jewels at high level.
+- **Alchemy:** flasks, flask affixes, flask upgrades. **Cooking:** meals that grant timed buffs; one meal active at a time, lasting 30–120 min (stronger meals last shorter).
 - **Enchanting:** applies, rerolls, upgrades and locks affixes using reagents; also performs Ashen Brand. Success chance and the tier ceiling scale with level.
 - **Gemcutting:** cuts uncut gems; raises gem level and quality, adds support slots, upgrades minions.
-- **Runecraft:** runes → Enchanting reagents, jewel inscriptions, Atlas keys.
+- **Runecraft:** runes used as Enchanting reagents, plus Atlas keys for pinnacle dungeons and special Atlas nodes.
 - **Cartography:** makes maps from shards; adds or rerolls map mods.
-- **Thieving:** gold and rare items from NPC targets (with a stun/fail mechanic).
+- **Thieving:** stealth (from level + mastery) vs each NPC target's perception sets the success chance; failure stuns you briefly and costs a little life. Rewards are gold + a small rare-item table per target.
 - **Farming:** timed plots (20 min – 8 h); compost improves yield.
 - **Agility:** obstacle course built from materials; each obstacle grants global modifiers.
 - **Astrology:** study constellations to unlock rerollable stat bonuses.
 
 ### 3.2 Workers and Town
 
-- `wage = baseWage(tier) × f(skillLevel)` gold/h, charged continuously. Gold reaching 0 pauses every worker.
+- **Wage depends on the tier of the action being worked** (cheap bulk materials vs expensive rare ones), not your skill level. Charged per hour, continuously. Gold reaching 0 pauses every worker.
 - Worker output = action rate × efficiency. Workers give 10% XP and no mastery (Town can raise the XP share).
-- **Town buildings (draft):** Guild Hall (worker slots), Workshop (worker efficiency), Training Yard (worker XP share), Vault (bank space), Waystone (auto-bank interval), Appraiser (loot filter rule count), Scribe (action queue length), Market (Exchange fees and stock), Tannery/Forge/Loom (artisan speed), Greenhouse (Farming plots), Observatory (Astrology), Course (Agility obstacle slots), Kitchen (Cooking buff duration), Archive (completion log views), Sanctum (respec discount).
+- **Town buildings (~15, one job each):** Guild Hall (worker slots), Workshop (worker efficiency), Training Yard (worker XP share), Vault (bank space), Waystone (auto-bank interval), Appraiser (loot filter rules), Scribe (action queue length), Market (Exchange fees and stock), Forge/Loom/Tannery (artisan speed), Greenhouse (Farming plots), Observatory (Astrology), Kitchen (Cooking), Sanctum (respec discount).
 
 ### 3.3 Stat and damage engine
 
@@ -159,26 +160,28 @@ Every skill has levels 1–99 (→ 120 later), per-action mastery, and a mastery
 
 ### 3.6 Gems
 
-- Uncut skill/support/spirit gems drop by tier; Gemcutting picks one gem from the pool for that tier.
+- Uncut skill/support/spirit gems drop in **tiers 1–5**; Gemcutting picks one gem from that tier's pool. Higher tiers have stronger gems and higher max levels.
+- Support slots: 2 when cut, then 3 at gem level 8, 4 at 14, 5 at 20.
 - Supports are tag-matched to skills; each support may be used once per character.
 - Ashen Brand works on gems (+1 level, an extra support slot, a transformed variant, or brick).
 
 ### 3.7 Passive tree
 
-- About 1,500 nodes, **100 points** in total (the split between level-ups and campaign rewards is set in Phase 6). Ascendancy has its own small sub-tree, with points earned across 4 trials.
+- About 1,500 nodes, **99 points**, all from level-ups. Ascendancy has its own small sub-tree, with points earned across 4 trials.
 - Node types: small, attribute choice, notable, choice notable, keystone, jewel socket.
-- Cluster-style jewels add sub-trees to outer sockets. Timeless-style jewels transform nodes within a radius (seeded).
+- **Cluster-style jewels:** 3 nested sizes. Large jewels add a sub-tree with sockets for medium ones, and mediums take small ones. Each rolls a theme and notables. Crafted by Jewelcrafting, also dropped in the Atlas.
+- **Timeless-style jewels:** one per character. Seeded, and transforms every notable and keystone in its radius into one of 5 themed variants. Dropped only by Atlas pinnacles.
 - Built with an in-repo **tree editor** (dev route) and drawn by a canvas renderer with pan/zoom, path-to-node and search.
 
 ### 3.8 Campaign, dungeons, bounties
 
-- **Acts:** each has 4–8 zones + an act-boss dungeon that gates the next act. The 4 ascendancy trials are spread across the acts.
-- **Bounties:** kill N of X, rewarding bounty marks for a shop and unlocking bounty-only zones.
+- **6 acts × 8 zones** (48 zones), each act with an act-boss dungeon that gates the next. The 4 ascendancy trials are spread across the acts.
+- **Bounties:** kill N of X, rewarding bounty marks. Marks are spent **only on unlocking bounty-only zones** (unique monsters and drops).
 - **Pinnacle dungeons** in the endgame, entered with fragments.
 
 ### 3.9 Atlas
 
-- A seeded procedural graph that reveals as you clear adjacent nodes. Biomes set the monster pools; special nodes include towers (local mod boosts) and citadels (region bosses → Atlas passive points).
+- A seeded procedural graph that reveals as you clear adjacent nodes. Biomes set the monster pools; special nodes: **Watchtowers** (boost map mods nearby), **Citadels** (region bosses → Atlas passive points + boss fragments), **Ancient vaults** (guaranteed unique/high-tier loot), **Corrupted nexus** (very hard, Ashen-Brand-themed rewards).
 - Map items tier 1–16+, with mods that trade difficulty for quantity and rarity.
 - Atlas progress unlocks **skill levels 100–120** and their new material tiers.
 
@@ -186,7 +189,7 @@ Every skill has levels 1–99 (→ 120 later), per-action mastery, and a mastery
 
 - Gold comes from vendor sales, Thieving and drops. It is spent on workers, Town, respec and the Exchange.
 - **Exchange:** each currency has a base price; your trades push it, and it reverts toward the base over time. Rare reagents have a daily stock.
-- **Vendor recipes:** deterministic conversions (e.g. 3 rares of the same base → that base's reagent).
+- **Vendor recipes:** about 10 deterministic conversions (e.g. 3 rares of the same base → a reagent, 5 uncut gems → 1 of the next tier, a full rare set → Enchanting materials).
 
 ---
 
@@ -195,7 +198,7 @@ Every skill has levels 1–99 (→ 120 later), per-action mastery, and a mastery
 ```
 AtlasOfAsh/
   src/
-    engine/          # pure TS, no DOM — runs in Worker and in Node (tests, sim-cli)
+    engine/          # pure TS, no DOM — runs in Worker and in Node (tests)
       core/          # rng (seeded xoshiro128**), scheduler (event queue), time, ids
       stats/         # modifiers, tags, calculation pipeline, provenance
       combat/        # duel sim, threat, ailments, flasks, rotation, boss scripts
@@ -210,7 +213,6 @@ AtlasOfAsh/
     worker/          # Web Worker host: owns GameState, runs sim, posts snapshots
     ui/              # React app (panels, tooltips, tree canvas, Codex)
     dev/             # tree editor, debug console, time-skip, item spawner
-  tools/sim-cli/     # headless balance harness
   .github/workflows/ # CI + GitHub Pages deploy
 ```
 
@@ -223,21 +225,13 @@ AtlasOfAsh/
 
 ---
 
-## 5. Additional recommendations (adopted unless you object)
+## 5. Engineering and polish features (chosen by you)
 
-1. **Stable content IDs:** every item, affix, node and gem gets a permanent string id that is never reused, so saves survive content changes.
-2. **Golden-number tests:** the damage engine is checked against hand-calculated builds. Any change in a result fails CI until it is reviewed.
-3. **Determinism test:** for the same seed, simulating 1h in small online steps must equal 1h as a single offline batch.
-4. **sim-cli balance harness:** run `build × zone × hours` headlessly and report kills/h, XP/h, loot/h and death rate. It is the basis for every balance pass.
-5. **Content linter:** validates the data packs on build (missing ids, unreachable tree nodes, affix tiers with no item level, drop tables summing wrong).
-6. **Crash-safe saves:** an error boundary saves state and offers an export string if the UI crashes.
-7. **Bug replay:** "Export debug bundle" (save + seeds + version) so issues can be reproduced exactly.
-8. **Colour-blind safe affix colours** and mod-text styling not based on colour alone.
-9. **Keyboard shortcuts** for panels (B = bank, P = passives, G = gems, C = Codex).
-10. **Feature flags** so unfinished systems can ship hidden on `main` while Pages stays playable.
-11. **i18n-ready strings:** UI text goes through a lookup from the start (English only for now).
-12. **Number formatting:** one formatter (1.23k, 4.56M, full value on hover) and consistent time formatting.
-13. **Changelog** shown on the title screen, pulled from `CHANGELOG.md` at build time.
+- **Save safety:** stable content IDs (never reused) · rolling backups (last 5) · crash-safe save + export string if the UI crashes · "Export debug bundle" (save + seeds + version) for exact bug reproduction.
+- **Testing:** golden-number tests for the damage engine · a determinism test (1h of online play must equal 1h of offline catch-up for the same seed).
+- **UX polish:** a unified number/time formatter (1.23k, 4.56M; full value on hover) · an in-game "What's new" changelog built from `CHANGELOG.md`.
+- **Process:** feature flags (unfinished systems hidden on `main`) · translation-ready UI text (English only for now).
+- **Declined:** sim-cli balance harness, content linter, colour-blind mod colours, keyboard shortcuts.
 
 ---
 
@@ -251,7 +245,7 @@ Each phase runs on its own branch (`phase-N-name`), with one commit per feature,
 | 1 | **Skilling core** | Character creation (realm + mode), skill framework (XP curve, mastery + pool), bank, gold, vendor; Mining, Woodcutting, Herbalism, Fishing, Thieving; **workers** + first Town buildings |
 | 2 | **Stat engine** | Modifiers, tags, damage/defence pipeline, entropy evasion, provenance; golden tests; first **Codex** panel |
 | 3 | **Items and artisan skills** | Bases, affixes, rarities, uniques framework, tooltips, equipment; Smithing, Tailoring, Woodworking, Jewelcrafting; **Enchanting**; Ashen Brand |
-| 4 | **Combat** | 1v1 event sim, monsters + mods, zones, trip bag + Waystone, **loot filter**, death penalty, flasks + **Alchemy**, offline combat, sim-cli |
+| 4 | **Combat** | 1v1 event sim, monsters + mods, zones, trip bag + Waystone, **loot filter**, death penalty, flasks + **Alchemy**, offline combat |
 | 5 | **Gems and rotation** | Uncut drops, **Gemcutting**, skill/support/spirit gems, once-per-character supports, priority list, Spirit, charges, combos, minions + threat |
 | 6 | **Passive tree** | Tree format + editor, renderer, 6 class starts, attribute choices, notables, choice notables, keystones, jewels, cluster + timeless jewels, **Runecraft**, respec, **build codes** |
 | 7 | **Campaign** | Acts, zones, boss scripts, act dungeons, 4 ascendancy trials, **24 ascendancies**, bounties |
@@ -263,15 +257,8 @@ Each phase runs on its own branch (`phase-N-name`), with one commit per feature,
 
 ---
 
-## 7. Open questions (to ask when each phase starts)
+## 7. Open questions (to ask with the question tool when each phase starts)
 
-1. **XP curves:** the exact formulas for character levels (1–100) and skill levels (1–120).
-2. **Tree points split:** how many of the 100 points come from levels versus campaign rewards.
-3. **Ascendancy names** and the full 4 × 6 designs.
-4. **Number of acts** and zones per act.
-5. **First league mechanic.**
-6. **Worker wage curve** and Town costs (tuned with sim-cli).
-7. **Cluster/timeless jewel** specifics (sizes, radius, transforms).
-8. **Bounty shop** contents.
-9. **Gem tiers** and the support-slot progression per level.
-10. **Cooking buff** stacking rules and durations.
+1. **Ascendancy names** and the detailed nodes for each of the 24 themes (Phase 7).
+2. **First league mechanic** (Phase 10).
+3. Exact Town costs and wage numbers (tuned during Phases 1 and 8).

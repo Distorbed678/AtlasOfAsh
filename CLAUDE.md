@@ -5,7 +5,7 @@ Idle game (Melvor-style skilling, one action at a time + paid workers) combined 
 - The full design and phase roadmap are in `docs/PLAN.md`. Read it before starting any phase.
 - When a phase starts, ask the user its open questions (PLAN §7) **with the AskUserQuestion tool**, offering suggestions as options. Record each answer in PLAN §1.
 - All names, lore and art must be original. Never use PoE/Melvor names, item names, text or assets.
-- `src/engine` is pure TypeScript with no DOM or React imports; it must run in a Web Worker and in Node (tests, sim-cli).
+- `src/engine` is pure TypeScript with no DOM or React imports; it must run in a Web Worker and in Node (tests).
 - All randomness goes through the seeded engine RNG. Online play and offline catch-up must use the same code path.
 
 ## Git workflow
