@@ -1,4 +1,5 @@
 import { SAVE_VERSION } from '../state';
+import { RETIRED_IDS } from '../content/retiredIds';
 
 /**
  * Save migrations. `MIGRATIONS[n]` upgrades a raw save from version n to n+1.
@@ -9,7 +10,28 @@ export type RawSave = Record<string, any>;
 export type Migration = (save: RawSave) => RawSave;
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
-  // 1: (s) => ({ ...s, version: 2, newField: defaultValue }),
+  // v1 (Phase 0 demo, single slot) → v2 (characters, skills, workers, town).
+  1: (s) => {
+    const bankItems: Record<string, number> = {};
+    for (const [id, qty] of Object.entries((s.bank ?? {}) as Record<string, number>)) {
+      if (!RETIRED_IDS.has(id)) bankItems[id] = qty;
+    }
+    return {
+      version: 2,
+      seed: s.seed,
+      createdAt: s.createdAt,
+      lastRealTime: s.lastRealTime,
+      time: s.time,
+      character: { id: 'default', name: 'Wanderer', classId: 'class.ironclad', mode: 'standard' },
+      rng: {},
+      bank: { items: bankItems },
+      gold: s.gold ?? 0,
+      action: null,
+      workers: [],
+      town: {},
+      stats: { actionsCompleted: s.stats?.actionsCompleted ?? 0 },
+    };
+  },
 };
 
 export function migrate(

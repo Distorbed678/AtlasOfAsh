@@ -2,69 +2,80 @@ import { describe, expect, it } from 'vitest';
 import { applyCommand } from './commands';
 import { Rng, seedRng } from './core/rng';
 import { advance, type System } from './sim';
-import { createInitialState } from './state';
 import { summarize, takeSnapshot } from './summary';
+import { HOUR, newState, setLevel } from './testUtils';
+import { createInitialState } from './state';
 
-const HOUR = 3_600_000;
+function running(seed = 42, actionId = 'action.chop_pine') {
+  const s = newState(seed);
+  applyCommand(s, { type: 'startAction', actionId });
+  return s;
+}
 
-function freshRunning(seed = 42) {
-  const s = createInitialState(seed, 0);
-  applyCommand(s, { type: 'startAction', actionId: 'action.demo_kindle' });
+/** A busy state: player mining + two workers (one thieving), with gold to pay wages. */
+function busy(seed: number) {
+  const s = newState(seed);
+  setLevel(s, 'skill.thieving', 30);
+  s.town['building.guild_hall'] = 2;
+  s.gold = 50_000;
+  applyCommand(s, { type: 'startAction', actionId: 'action.mine_copper' });
+  applyCommand(s, { type: 'assignWorker', slot: 0, actionId: 'action.gather_sage' });
+  applyCommand(s, { type: 'assignWorker', slot: 1, actionId: 'action.pickpocket_watchman' });
   return s;
 }
 
 describe('advance', () => {
-  it('completes the expected number of action cycles', () => {
-    const s = freshRunning();
+  it('completes the expected number of simple action cycles', () => {
+    const s = running();
     advance(s, HOUR);
-    expect(s.stats.actionsCompleted).toBe(HOUR / 3000);
+    // 720 at base speed; mastery gained during the hour makes it slightly faster.
+    expect(s.stats.actionsCompleted).toBeGreaterThanOrEqual(HOUR / 5000);
+    expect(s.stats.actionsCompleted).toBeLessThan((HOUR / 5000) * 1.1);
+    expect(s.bank.items['item.pine_log']).toBeGreaterThanOrEqual(s.stats.actionsCompleted);
     expect(s.time).toBe(HOUR);
   });
 
   it('does nothing when idle', () => {
-    const s = createInitialState(1, 0);
-    const r = advance(s, HOUR);
-    expect(r.eventsProcessed).toBe(0);
-    expect(s.bank).toEqual({});
+    const s = newState();
+    expect(advance(s, HOUR).eventsProcessed).toBe(0);
+    expect(s.bank.items).toEqual({});
   });
 
   it('refuses to go backwards', () => {
-    const s = freshRunning();
+    const s = running();
     advance(s, 1000);
     expect(() => advance(s, 500)).toThrow(/backwards/);
   });
 
   it('detects a system that never moves forward', () => {
     const stuck: System = { id: 'stuck', nextEventTime: () => 10, processEvent: () => {} };
-    const s = createInitialState(1, 0);
-    expect(() => advance(s, 100, { systems: [stuck] })).toThrow(/did not move/);
+    expect(() => advance(createInitialState(1, 0), 100, { systems: [stuck] })).toThrow(
+      /did not move/,
+    );
   });
 });
 
 describe('determinism: online stepping == offline batch', () => {
-  it('1h of small random steps equals a single 1h advance', () => {
-    const online = freshRunning(1234);
-    const offline = freshRunning(1234);
-
-    // Online: irregular frame-like steps (from a separate RNG so steps vary).
+  it('player + workers: 2h of random small steps equals one 2h advance', () => {
+    const online = busy(1234);
+    const offline = busy(1234);
     const stepRng = new Rng(seedRng(999));
-    while (online.time < HOUR) {
-      const step = Math.min(HOUR - online.time, stepRng.int(1, 400));
-      advance(online, online.time + step);
+    while (online.time < 2 * HOUR) {
+      advance(online, Math.min(2 * HOUR, online.time + stepRng.int(1, 700)));
     }
-    advance(offline, HOUR);
-
+    advance(offline, 2 * HOUR);
     expect(online).toEqual(offline);
+    expect(online.stats.workerActions).toBeGreaterThan(0);
   });
 
   it('holds across a mid-run command at the same sim time', () => {
-    const a = freshRunning(77);
-    const b = freshRunning(77);
+    const a = running(77);
+    const b = running(77);
     for (let t = 0; t < 10 * 60_000; t += 137) advance(a, t);
     advance(a, 10 * 60_000);
     advance(b, 10 * 60_000);
-    applyCommand(a, { type: 'startAction', actionId: 'action.demo_sift' });
-    applyCommand(b, { type: 'startAction', actionId: 'action.demo_sift' });
+    applyCommand(a, { type: 'startAction', actionId: 'action.fish_shallows' });
+    applyCommand(b, { type: 'startAction', actionId: 'action.fish_shallows' });
     for (let t = a.time; t < HOUR; t += 991) advance(a, t);
     advance(a, HOUR);
     advance(b, HOUR);
@@ -73,36 +84,28 @@ describe('determinism: online stepping == offline batch', () => {
 });
 
 describe('long offline performance', () => {
-  it('simulates 7 days of a 3s action quickly', () => {
-    const s = freshRunning();
+  it('simulates 7 days of player + 2 workers quickly', () => {
+    const s = busy(5);
+    s.gold = 1e9;
     const start = performance.now();
     advance(s, 7 * 24 * HOUR);
     const ms = performance.now() - start;
-    expect(s.stats.actionsCompleted).toBe((7 * 24 * HOUR) / 3000);
-    expect(ms).toBeLessThan(2000);
+    expect(s.stats.actionsCompleted).toBeGreaterThan(50_000);
+    expect(ms).toBeLessThan(5000);
   });
 });
 
 describe('summary', () => {
-  it('reports gains between snapshots', () => {
-    const s = freshRunning();
+  it('reports items, xp and level gains', () => {
+    const s = running();
     const before = takeSnapshot(s);
     advance(s, HOUR);
     const sum = summarize(before, takeSnapshot(s));
     expect(sum.durationMs).toBe(HOUR);
-    expect(sum.actionsCompleted).toBe(1200);
-    expect(sum.items.find((i) => i.itemId === 'item.demo_ember')!.delta).toBeGreaterThanOrEqual(
-      1200,
-    );
-  });
-});
-
-describe('commands', () => {
-  it('sells items for gold and clamps to owned quantity', () => {
-    const s = createInitialState(1, 0);
-    s.bank['item.demo_ash'] = 5;
-    applyCommand(s, { type: 'sellItem', itemId: 'item.demo_ash', qty: 99 });
-    expect(s.bank['item.demo_ash']).toBeUndefined();
-    expect(s.gold).toBe(5);
+    expect(sum.actionsCompleted).toBe(s.stats.actionsCompleted);
+    expect(sum.items.find((i) => i.itemId === 'item.pine_log')!.delta).toBeGreaterThanOrEqual(720);
+    const wc = sum.skills.find((g) => g.skillId === 'skill.woodcutting')!;
+    expect(wc.xp).toBeGreaterThan(7000);
+    expect(wc.levelAfter).toBeGreaterThan(wc.levelBefore);
   });
 });

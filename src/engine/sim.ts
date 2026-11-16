@@ -1,11 +1,13 @@
 import { CONTENT, type Content } from './content';
 import type { GameState } from './state';
-import { actionSystem } from './systems/actionSystem';
+import type { SkillId } from './content/types';
+import { skillSystem } from './systems/skillSystem';
 
 /** Something notable that happened during simulation (for logs/notifications). */
 export type SimEvent =
   | { type: 'actionComplete'; actionId: string; time: number }
-  | { type: 'itemGained'; itemId: string; qty: number; time: number };
+  | { type: 'itemGained'; itemId: string; qty: number; time: number }
+  | { type: 'levelUp'; skillId: SkillId; level: number; time: number };
 
 export interface SimContext {
   readonly content: Content;
@@ -27,7 +29,7 @@ export interface System {
 }
 
 /** Registration order is also the tie-break order for simultaneous events. */
-export const SYSTEMS: readonly System[] = [actionSystem];
+export const SYSTEMS: readonly System[] = [skillSystem];
 
 export interface AdvanceOptions {
   systems?: readonly System[];
