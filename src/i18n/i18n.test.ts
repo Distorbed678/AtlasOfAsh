@@ -20,6 +20,8 @@ describe('i18n', () => {
       ...CONTENT.buildings.all(),
     ];
     for (const c of all) expect(hasTranslation(c.id), c.id).toBe(true);
+    for (const i of CONTENT.items.all())
+      expect(hasTranslation(`${i.id}.desc`), `${i.id}.desc`).toBe(true);
     for (const c of CONTENT.classes.all()) {
       expect(hasTranslation(`${c.id}.desc`)).toBe(true);
       for (const w of c.weapons) expect(hasTranslation(w), w).toBe(true);

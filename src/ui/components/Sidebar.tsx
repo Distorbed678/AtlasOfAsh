@@ -1,11 +1,13 @@
+import type { ReactNode } from 'react';
 import { SKILL_IDS } from '../../engine/content';
 import { bankCapacity, bankSlotsUsed } from '../../engine/economy/bank';
-import { skillLevel } from '../../engine/skills/actions';
+import { levelProgress } from '../../engine/skills/xp';
 import { nameOf, t, type TKey } from '../../i18n';
-import { request, useGameState } from '../bridge';
+import { request, useGame, useGameState } from '../bridge';
 import { useFlag } from '../flags';
 import { SKILL_ICONS } from '../icons';
 import { href, sameRoute, type Route } from '../router';
+import { Icon } from './Icon';
 
 /** Systems on the roadmap, shown greyed out with the phase that delivers them. */
 const UPCOMING: { key: TKey; phase: number }[] = [
@@ -25,24 +27,22 @@ interface Props {
 export function Sidebar({ route, open, onNavigate }: Props) {
   const devTools = useFlag('devTools');
   const showUpcoming = useFlag('showUpcoming');
-  const levels = useGameState((s) => SKILL_IDS.map((id) => skillLevel(s, id)).join(','));
+  const skills = useGameState((s) => s.skills);
   const bankUsed = useGameState((s) => bankSlotsUsed(s));
   const bankCap = useGameState((s) => bankCapacity(s));
-  const levelList = levels.split(',');
+  const levelFlash = useGame((s) => s.levelFlash);
 
-  const link = (to: Route, label: string, icon: string, badge?: string) => (
+  const link = (to: Route, label: string, icon: string, extra?: ReactNode, flash = false) => (
     <a
       key={href(to)}
       href={href(to)}
-      className={`nav-link${sameRoute(route, to) ? ' active' : ''}`}
+      className={`nav-link${sameRoute(route, to) ? ' active' : ''}${flash ? ' flash' : ''}`}
       aria-current={sameRoute(route, to) ? 'page' : undefined}
       onClick={onNavigate}
     >
-      <span className="nav-icon" aria-hidden="true">
-        {icon}
-      </span>
-      {label}
-      {badge && <span className="nav-badge nav-badge-plain">{badge}</span>}
+      <Icon name={icon} size={18} className="nav-icon" />
+      <span className="nav-label">{label}</span>
+      {extra}
     </a>
   );
 
@@ -51,16 +51,33 @@ export function Sidebar({ route, open, onNavigate }: Props) {
       <div className="sidebar-brand">{t('app.title')}</div>
       <div className="nav-group">
         <div className="nav-group-title">{t('nav.group.general')}</div>
-        {link({ page: 'overview' }, t('nav.overview'), '◈')}
-        {link({ page: 'bank' }, t('nav.bank'), '▤', `${bankUsed}/${bankCap}`)}
-        {link({ page: 'town' }, t('nav.town'), '⌂')}
-        {link({ page: 'workers' }, t('nav.workers'), '☗')}
+        {link({ page: 'overview' }, t('nav.overview'), 'nav.overview')}
+        {link(
+          { page: 'bank' },
+          t('nav.bank'),
+          'nav.bank',
+          <span className="nav-badge nav-badge-plain">{`${bankUsed}/${bankCap}`}</span>,
+        )}
+        {link({ page: 'town' }, t('nav.town'), 'nav.town')}
+        {link({ page: 'workers' }, t('nav.workers'), 'nav.workers')}
       </div>
       <div className="nav-group">
         <div className="nav-group-title">{t('nav.group.skills')}</div>
-        {SKILL_IDS.map((id, i) =>
-          link({ page: 'skill', skillId: id }, nameOf(id), SKILL_ICONS[id], levelList[i]),
-        )}
+        {SKILL_IDS.map((id) => {
+          const p = levelProgress(skills[id].xp);
+          return link(
+            { page: 'skill', skillId: id },
+            nameOf(id),
+            SKILL_ICONS[id],
+            <>
+              <span className="nav-badge nav-badge-plain">{p.level}</span>
+              <span className="nav-xp" aria-hidden="true">
+                <span style={{ width: `${p.fraction * 100}%` }} />
+              </span>
+            </>,
+            !!levelFlash[id],
+          );
+        })}
       </div>
 
       {showUpcoming && (
@@ -68,10 +85,10 @@ export function Sidebar({ route, open, onNavigate }: Props) {
           <div className="nav-group-title">{t('nav.group.upcoming')}</div>
           {UPCOMING.map((u) => (
             <div key={u.key} className="nav-link disabled" aria-disabled="true">
-              <span className="nav-icon" aria-hidden="true">
+              <span className="nav-icon nav-dot" aria-hidden="true">
                 ·
               </span>
-              {t(u.key)}
+              <span className="nav-label">{t(u.key)}</span>
               <span className="nav-badge">{t('nav.phase', { n: u.phase })}</span>
             </div>
           ))}
@@ -79,8 +96,8 @@ export function Sidebar({ route, open, onNavigate }: Props) {
       )}
 
       <div className="nav-group nav-bottom">
-        {link({ page: 'settings' }, t('nav.settings'), '⚙')}
-        {devTools && link({ page: 'dev' }, t('nav.dev'), '⚒')}
+        {link({ page: 'settings' }, t('nav.settings'), 'nav.settings')}
+        {devTools && link({ page: 'dev' }, t('nav.dev'), 'nav.dev')}
         <button
           className="nav-link nav-button"
           onClick={() => {
@@ -88,10 +105,8 @@ export function Sidebar({ route, open, onNavigate }: Props) {
             void request({ type: 'closeCharacter' });
           }}
         >
-          <span className="nav-icon" aria-hidden="true">
-            ⇄
-          </span>
-          {t('nav.switch')}
+          <Icon name="nav.switch" size={18} className="nav-icon" />
+          <span className="nav-label">{t('nav.switch')}</span>
         </button>
         <div className="nav-version">
           {t('app.version', { version: __APP_VERSION__, sha: __BUILD_SHA__ })}

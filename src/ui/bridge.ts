@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import type { Command } from '../engine/commands';
+import { SKILL_IDS } from '../engine/content';
+import { levelForXp } from '../engine/skills/xp';
+import { nameOf, t } from '../i18n';
 import type { GameState } from '../engine/state';
 import type { ProgressSummary } from '../engine/summary';
 import type { CharacterSummary, FromWorker, ToWorker, WorkerRequest } from '../worker/protocol';
@@ -13,6 +16,8 @@ interface GameStore {
   catchUp: { done: number; total: number } | null;
   away: { summary: ProgressSummary; reason: 'offline' | 'devSkip' } | null;
   workerError: string | null;
+  /** Skills that just levelled up (drives a short sidebar flash). */
+  levelFlash: Record<string, boolean>;
   dismissAway(): void;
   dismissError(): void;
 }
@@ -24,6 +29,7 @@ export const useGame = create<GameStore>((set) => ({
   catchUp: null,
   away: null,
   workerError: null,
+  levelFlash: {},
   dismissAway: () => set({ away: null }),
   dismissError: () => set({ workerError: null }),
 }));
@@ -43,6 +49,7 @@ function onMessage(msg: FromWorker): void {
       useGame.setState({ ready: true, characters: msg.characters });
       return;
     case 'snapshot':
+      announceLevelUps(useGame.getState().state, msg.state);
       useGame.setState({ state: msg.state });
       return;
     case 'characters':
@@ -69,6 +76,28 @@ function onMessage(msg: FromWorker): void {
       useGame.setState({ workerError: msg.message });
       return;
   }
+}
+
+/** Toast level-ups that happen during live play (catch-up gains go in the away report). */
+function announceLevelUps(prev: GameState | null, next: GameState | null): void {
+  const g = useGame.getState();
+  if (!prev || !next || prev.character.id !== next.character.id || g.away || g.catchUp) return;
+  const flash = { ...g.levelFlash };
+  let changed = false;
+  for (const id of SKILL_IDS) {
+    const before = levelForXp(prev.skills[id].xp);
+    const after = levelForXp(next.skills[id].xp);
+    if (after > before) {
+      toast(t('skill.levelUp', { skill: nameOf(id), level: after }), 'success');
+      flash[id] = true;
+      changed = true;
+      setTimeout(() => {
+        const { [id]: _done, ...rest } = useGame.getState().levelFlash;
+        useGame.setState({ levelFlash: rest });
+      }, 2500);
+    }
+  }
+  if (changed) useGame.setState({ levelFlash: flash });
 }
 
 export function startGame(): void {

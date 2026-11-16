@@ -6,6 +6,7 @@ import type { BackupInfo } from '../../worker/protocol';
 import { request, useGameState } from '../bridge';
 import { downloadDebugBundle } from '../debugBundle';
 import { useFlags } from '../flags';
+import { href } from '../router';
 import { toast } from '../toasts';
 
 export function SettingsPage() {
@@ -116,6 +117,13 @@ export function SettingsPage() {
         <button className="btn" onClick={() => void run(() => downloadDebugBundle())}>
           {t('settings.debugButton')}
         </button>
+      </section>
+
+      <section className="panel">
+        <h2 className="section-title">{t('nav.credits')}</h2>
+        <a className="btn" href={href({ page: 'credits' })}>
+          {t('credits.title')}
+        </a>
       </section>
 
       <FlagsPanel />

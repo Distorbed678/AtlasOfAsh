@@ -1,22 +1,32 @@
 import { actionsForSkill, CONTENT } from '../../engine/content';
 import type { ActionDef, SkillId } from '../../engine/content/types';
-import { canPerform, cycleDuration, maxRockHp, successChance } from '../../engine/skills/actions';
+import { canPerform, cycleDuration, maxRockHp, skillLevel } from '../../engine/skills/actions';
 import {
   masteryLevel,
+  playerModifiers,
   poolCap,
   poolCostForNextMastery,
   poolFraction,
   POOL_THRESHOLDS,
 } from '../../engine/skills/mastery';
-import { levelProgress, MAX_MASTERY_LEVEL } from '../../engine/skills/xp';
+import { actionRates } from '../../engine/skills/rates';
+import {
+  levelProgress,
+  MAX_MASTERY_LEVEL,
+  MAX_SKILL_LEVEL,
+  xpForLevel,
+} from '../../engine/skills/xp';
 import type { GameState } from '../../engine/state';
 import { nameOf, t, tDynamic, type TKey } from '../../i18n';
 import { formatDuration, formatNumber, formatPercent } from '../../shared/format';
 import { command, useGame, useGameState } from '../bridge';
+import { Icon } from '../components/Icon';
 import { ProgressBar } from '../components/ProgressBar';
 import { SkillXpBar } from '../components/SkillHeader';
 import { describeOutputs } from '../describe';
 import { SKILL_ICONS } from '../icons';
+
+const HOUR = 3_600_000;
 
 export function SkillPage({ skillId }: { skillId: SkillId }) {
   const skill = CONTENT.skills.get(skillId);
@@ -26,9 +36,7 @@ export function SkillPage({ skillId }: { skillId: SkillId }) {
     <div className="page">
       <div className="skill-header">
         <h1 className="page-title">
-          <span className="title-icon" aria-hidden="true">
-            {SKILL_ICONS[skillId]}
-          </span>
+          <Icon name={SKILL_ICONS[skillId]} size={30} className="title-icon" />
           {nameOf(skillId)}
         </h1>
         <p className="dim">{tDynamic(`${skillId}.desc`)}</p>
@@ -36,6 +44,7 @@ export function SkillPage({ skillId }: { skillId: SkillId }) {
       <div className="panel panel-wide">
         <SkillXpBar skillId={skillId} />
         <div className="faint small">{t('skill.totalXp', { xp: formatNumber(totalXp) })}</div>
+        <NextUnlock skillId={skillId} />
         {skill.rareFinds.map((r) => (
           <div key={r.itemId} className="dim small">
             {t('skill.rareFind', { item: nameOf(r.itemId), n: Math.round(1 / r.chance) })}
@@ -48,6 +57,47 @@ export function SkillPage({ skillId }: { skillId: SkillId }) {
           <ActionCard key={def.id} def={def} />
         ))}
       </div>
+    </div>
+  );
+}
+
+/** The action whose XP rate we use for estimates: the active one in this skill, else the best. */
+function referenceAction(state: GameState, skillId: SkillId): ActionDef | null {
+  const active = state.action ? CONTENT.actions.get(state.action.actionId) : null;
+  if (active?.skillId === skillId) return active;
+  let best: ActionDef | null = null;
+  let bestXp = 0;
+  for (const def of actionsForSkill(skillId)) {
+    if (!canPerform(state, def)) continue;
+    const xp = actionRates(state, def).xpPerHour;
+    if (xp > bestXp) {
+      best = def;
+      bestXp = xp;
+    }
+  }
+  return best;
+}
+
+function NextUnlock({ skillId }: { skillId: SkillId }) {
+  const state = useGame((s) => s.state) as GameState;
+  const level = skillLevel(state, skillId);
+  const next = actionsForSkill(skillId).find((a) => a.level > level);
+  if (!next) return null;
+  const ref = referenceAction(state, skillId);
+  const xpNeeded = xpForLevel(next.level) - state.skills[skillId].xp;
+  const rate = ref ? actionRates(state, ref).xpPerHour : 0;
+  return (
+    <div className="small">
+      {t('skill.next', { action: nameOf(next.id), level: next.level })}
+      {ref && rate > 0 && (
+        <span className="dim">
+          {' — '}
+          {t('skill.nextEta', {
+            time: formatDuration((xpNeeded / rate) * HOUR),
+            action: nameOf(ref.id),
+          })}
+        </span>
+      )}
     </div>
   );
 }
@@ -93,26 +143,36 @@ function PoolPanel({ skillId }: { skillId: SkillId }) {
   );
 }
 
+function MasteryBonuses({ state, def }: { state: GameState; def: ActionDef }) {
+  const mods = playerModifiers(state, def, skillLevel(state, def.skillId));
+  const lines: string[] = [];
+  if (mods.durationMult < 1)
+    lines.push(t('action.bonus.time', { pct: formatPercent(1 - mods.durationMult, 0) }));
+  if (mods.doubleChance > 0)
+    lines.push(t('action.bonus.double', { pct: formatPercent(mods.doubleChance, 0) }));
+  if (def.type === 'rock' && mods.rockHpBonus > 0)
+    lines.push(t('action.bonus.rock', { n: mods.rockHpBonus }));
+  if (def.type === 'thieve')
+    lines.push(t('action.bonus.stealth', { n: mods.stealth, perception: def.perception }));
+  return (
+    <details className="mastery-details small">
+      <summary>{t('action.masteryBonuses')}</summary>
+      {lines.length === 0 ? (
+        <p className="faint">{t('action.bonus.none')}</p>
+      ) : (
+        <ul>
+          {lines.map((l) => (
+            <li key={l}>{l}</li>
+          ))}
+        </ul>
+      )}
+    </details>
+  );
+}
+
 function ActionCard({ def }: { def: ActionDef }) {
   const state = useGame((s) => s.state) as GameState;
   const unlocked = canPerform(state, def);
-  const runner = state.action?.actionId === def.id ? state.action : null;
-  const active = runner !== null;
-  const mlvl = masteryLevel(state, def);
-  const mxp = state.skills[def.skillId].mastery[def.id] ?? 0;
-  const mprog = levelProgress(mxp, MAX_MASTERY_LEVEL);
-  const duration = cycleDuration(state, def, { kind: 'player' });
-  const poolCost = poolCostForNextMastery(state, def);
-  const canSpend = poolCost !== null && state.skills[def.skillId].pool >= poolCost;
-  const workerHere = state.workers.some((w) => w.actionId === def.id);
-
-  let progress = 0;
-  let status: string | null = null;
-  if (runner) {
-    if (runner.rockRespawnAt && state.time < runner.rockRespawnAt) status = t('action.respawning');
-    else if (runner.stunnedUntil && state.time < runner.stunnedUntil) status = t('action.stunned');
-    else progress = (state.time - runner.startedAt) / (runner.nextAt - runner.startedAt);
-  }
 
   if (!unlocked) {
     return (
@@ -121,6 +181,26 @@ function ActionCard({ def }: { def: ActionDef }) {
         <div className="dim small">{t('action.locked', { level: def.level })}</div>
       </div>
     );
+  }
+
+  const runner = state.action?.actionId === def.id ? state.action : null;
+  const active = runner !== null;
+  const mlvl = masteryLevel(state, def);
+  const mprog = levelProgress(state.skills[def.skillId].mastery[def.id] ?? 0, MAX_MASTERY_LEVEL);
+  const duration = cycleDuration(state, def, { kind: 'player' });
+  const poolCost = poolCostForNextMastery(state, def);
+  const canSpend = poolCost !== null && state.skills[def.skillId].pool >= poolCost;
+  const workerHere = state.workers.some((w) => w.actionId === def.id);
+  const rates = actionRates(state, def);
+  const skillXp = levelProgress(state.skills[def.skillId].xp);
+  const mainItem = Object.entries(rates.itemsPerHour).sort((a, b) => b[1] - a[1])[0];
+
+  let progress = 0;
+  let status: string | null = null;
+  if (runner) {
+    if (runner.rockRespawnAt && state.time < runner.rockRespawnAt) status = t('action.respawning');
+    else if (runner.stunnedUntil && state.time < runner.stunnedUntil) status = t('action.stunned');
+    else progress = (state.time - runner.startedAt) / (runner.nextAt - runner.startedAt);
   }
 
   return (
@@ -134,13 +214,31 @@ function ActionCard({ def }: { def: ActionDef }) {
         <span>{formatDuration(duration)}</span>
         <span>{t('action.xp', { xp: def.xp })}</span>
         {def.type === 'thieve' && (
-          <span>
-            {t('action.success', {
-              pct: formatPercent(successChance(state, def, { kind: 'player' }), 0),
-            })}
-          </span>
+          <span>{t('action.success', { pct: formatPercent(rates.successChance, 0) })}</span>
         )}
       </div>
+      <div className="stat-row small rates">
+        <span>{t('action.rates', { xp: formatNumber(Math.round(rates.xpPerHour)) })}</span>
+        {def.type === 'thieve' ? (
+          <span>{t('action.goldRate', { n: formatNumber(Math.round(rates.goldPerHour)) })}</span>
+        ) : (
+          mainItem && (
+            <span>
+              {t('action.itemsRate', {
+                n: formatNumber(Math.round(mainItem[1])),
+                item: nameOf(mainItem[0]),
+              })}
+            </span>
+          )
+        )}
+      </div>
+      {!skillXp.atCap && skillXp.level < MAX_SKILL_LEVEL && (
+        <div className="faint small">
+          {t('action.nextLevel', {
+            time: formatDuration(((skillXp.needed - skillXp.current) / rates.xpPerHour) * HOUR),
+          })}
+        </div>
+      )}
       {def.type === 'rock' && (
         <div className="faint small">
           {t('action.rock', {
@@ -157,6 +255,7 @@ function ActionCard({ def }: { def: ActionDef }) {
           <div className="mini-fill" style={{ width: `${mprog.fraction * 100}%` }} />
         </div>
       </div>
+      <MasteryBonuses state={state} def={def} />
       {workerHere && <div className="faint small">{t('action.workerHere')}</div>}
       <div className="row">
         <button

@@ -4,7 +4,9 @@ import { bankCapacity, bankSlotsUsed } from '../../engine/economy/bank';
 import { nameOf, t, tDynamic } from '../../i18n';
 import { formatNumber } from '../../shared/format';
 import { command, useGameState } from '../bridge';
+import { Icon } from '../components/Icon';
 import { Num } from '../components/Num';
+import { itemIcon } from '../icons';
 
 type SortKey = 'name' | 'qty' | 'value' | 'category';
 
@@ -113,12 +115,15 @@ export function BankPage() {
       <div className="bank-layout">
         <div className="bank-grid">
           {entries.length === 0 && <p className="dim">{t('bank.empty')}</p>}
-          {entries.map(({ id, qty }) => (
+          {entries.map(({ id, qty, def }) => (
             <button
               key={id}
               className={`bank-item${selected === id ? ' selected' : ''}`}
               onClick={() => setSelected(id)}
             >
+              {def && (
+                <Icon name={itemIcon(def)} tier={def.tier} size={26} className="bank-item-icon" />
+              )}
               <span className="bank-item-name">{nameOf(id)}</span>
               <Num value={qty} className="bank-item-qty" />
               {bank.locked.includes(id) && (
@@ -148,7 +153,11 @@ function ItemDetail({ itemId }: { itemId: string | null }) {
 
   return (
     <aside className="panel item-detail">
-      <h2 className="section-title">{nameOf(itemId)}</h2>
+      <div className="item-detail-head">
+        <Icon name={itemIcon(def)} tier={def.tier} size={40} />
+        <h2 className="section-title">{nameOf(itemId)}</h2>
+      </div>
+      <p className="flavour">{tDynamic(`${itemId}.desc`)}</p>
       <div className="dim small">
         {tDynamic(`category.${def.category}`)} · T{def.tier}
       </div>

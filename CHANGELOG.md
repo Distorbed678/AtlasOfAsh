@@ -2,6 +2,22 @@
 
 All notable changes to Atlas of Ash. Shown in-game under "What's new".
 
+## [0.1.1] - 2026-11-16
+
+### Added
+
+- Icons from game-icons.net for skills, items (tinted by tier), buildings and navigation, with a Credits page.
+- Action cards show XP/hour, items or gold per hour, and time to your next level.
+- Mastery bonuses breakdown on every action card.
+- Skill pages show your next unlock and roughly how long it will take.
+- Sidebar XP bars, plus a toast and sidebar flash when a skill levels up.
+- Flavour text for every item.
+- Fishing spots now also catch junk (driftwood, boots, nets) and the occasional pearl.
+
+### Changed
+
+- Skill XP is 1.5× slower across the board (level 99 takes roughly two weeks of non-stop idling per skill).
+
 ## [0.1.0] - 2026-11-16
 
 ### Added
