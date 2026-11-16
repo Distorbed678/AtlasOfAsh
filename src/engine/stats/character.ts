@@ -73,6 +73,9 @@ export interface CharacterSheet {
   actPenalty: number;
 }
 
+/** Every character starts with 10 in each attribute (PLAN §1.10). */
+export const BASE_ATTRIBUTE = 10;
+
 const ATTRIBUTE_SOURCE: ModSource = { kind: 'attribute', id: 'attributes', label: 'Attributes' };
 
 /**
@@ -93,9 +96,9 @@ export function computeCharacter(
   const ctx: QueryContext = { conditions: input.conditions };
   const base = new ModSet(input.mods);
 
-  const str = base.query('str', 0, ctx);
-  const dex = base.query('dex', 0, ctx);
-  const int = base.query('int', 0, ctx);
+  const str = base.query('str', BASE_ATTRIBUTE, ctx, classSource);
+  const dex = base.query('dex', BASE_ATTRIBUTE, ctx, classSource);
+  const int = base.query('int', BASE_ATTRIBUTE, ctx, classSource);
 
   const mods = new ModSet(input.mods);
   const strLife = Math.floor(str.total / 5) * LIFE_PER_5_STR;

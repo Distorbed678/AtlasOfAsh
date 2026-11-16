@@ -1,6 +1,6 @@
 import { CONTENT } from '../content';
 import { tryStartWorkerCycle } from '../economy/workers';
-import { completeCycle, wagePerCycle } from '../skills/actions';
+import { completeCycle, cycleBlocker, wagePerCycle } from '../skills/actions';
 import type { System } from '../sim';
 
 /**
@@ -18,7 +18,8 @@ export const skillSystem: System = {
       if (w.runner && w.runner.nextAt < t) t = w.runner.nextAt;
       else if (w.paused && w.actionId) {
         const def = CONTENT.actions.get(w.actionId);
-        if (state.gold >= wagePerCycle(state, def)) t = Math.min(t, state.time);
+        if (state.gold >= wagePerCycle(state, def) && !cycleBlocker(state, def))
+          t = Math.min(t, state.time);
       }
     }
     return t;
@@ -27,13 +28,33 @@ export const skillSystem: System = {
   processEvent(state, ctx) {
     const t = state.time;
     if (state.action && state.action.nextAt === t) {
-      completeCycle(state, state.action, { kind: 'player' }, ctx.emit, ctx.content);
+      const keepGoing = completeCycle(
+        state,
+        state.action,
+        { kind: 'player' },
+        ctx.emit,
+        ctx.content,
+      );
+      if (!keepGoing) {
+        ctx.emit({ type: 'actionStopped', actionId: state.action.actionId, time: t });
+        state.action = null;
+      }
     }
     const due: number[] = [];
     state.workers.forEach((w, slot) => {
       if (w.runner && w.runner.nextAt === t) {
-        completeCycle(state, w.runner, { kind: 'worker', slot }, ctx.emit, ctx.content);
-        due.push(slot);
+        const keepGoing = completeCycle(
+          state,
+          w.runner,
+          { kind: 'worker', slot },
+          ctx.emit,
+          ctx.content,
+        );
+        if (keepGoing) due.push(slot);
+        else {
+          w.runner = null;
+          w.paused = true;
+        }
       }
     });
     for (const slot of due) tryStartWorkerCycle(state, slot, t, ctx.content);

@@ -1,7 +1,9 @@
 import { CONTENT, type Content } from '../content';
 import type { ActionDef, WeightedItem } from '../content/types';
 import type { Rng } from '../core/rng';
-import { addGold, addItem } from '../economy/bank';
+import { addGold, addItem, hasItems, removeItem } from '../economy/bank';
+import { newItem, newUnique } from '../items/generate';
+import { addToStash, allocateUid, stashFree } from '../items/stash';
 import { wageMultiplier, workerEfficiency, workerXpShare } from '../economy/town';
 import type { SimEvent } from '../sim';
 import { rngFor, type GameState, type Runner } from '../state';
@@ -27,6 +29,19 @@ export function skillLevel(state: GameState, skillId: ActionDef['skillId']): num
 
 export function canPerform(state: GameState, def: ActionDef): boolean {
   return skillLevel(state, def.skillId) >= def.level;
+}
+
+/** Why a cycle can't start right now (crafting needs materials / stash space), or null. */
+export function cycleBlocker(state: GameState, def: ActionDef): 'materials' | 'stash' | null {
+  if (def.type !== 'craft') return null;
+  if (!hasItems(state, def.inputs)) return 'materials';
+  if (def.output.kind !== 'item' && stashFree(state) < 1) return 'stash';
+  return null;
+}
+
+/** Crafted gear rarity chances (player mastery raises them; workers use the base). */
+export function craftRarityChances(masteryLvl: number): { magic: number; rare: number } {
+  return { magic: 0.05 + 0.0005 * masteryLvl, rare: 0.01 + 0.0002 * masteryLvl };
 }
 
 function modifiersFor(
@@ -113,8 +128,10 @@ export function completeCycle(
   ref: RunnerRef,
   emit: (e: SimEvent) => void,
   content: Content = CONTENT,
-): void {
+): boolean {
   const def = content.actions.get(runner.actionId);
+  // Crafting: materials may have been used up (or the stash filled) since the cycle began.
+  if (cycleBlocker(state, def)) return false;
   const skill = state.skills[def.skillId];
   const mods = modifiersFor(state, def, ref, content);
   const rng = rngFor(state, streamFor(ref));
@@ -148,9 +165,34 @@ export function completeCycle(
         state.stats.thievingFails++;
       }
       break;
+    case 'craft': {
+      for (const [id, qty] of Object.entries(def.inputs)) removeItem(state, id, qty);
+      const out = def.output;
+      if (out.kind === 'item') {
+        gained.push({ itemId: out.itemId, qty: out.qty });
+      } else {
+        const uid = allocateUid(state);
+        let item;
+        if (out.kind === 'unique') item = newUnique(uid, out.uniqueId, rng, content);
+        else {
+          const base = content.bases.get(out.baseId);
+          const ilvl = Math.max(1, Math.min(base.tier * 10, levelForXp(skill.xp)));
+          const chances = craftRarityChances(isPlayer ? masteryLevelOf(state, def) : 0);
+          const roll = rng.float();
+          const rarity =
+            roll < chances.rare ? 'rare' : roll < chances.rare + chances.magic ? 'magic' : 'normal';
+          item = newItem(uid, base.id, ilvl, rarity, rng, content);
+        }
+        addToStash(state, item);
+        state.stats.itemsCrafted++;
+        emit({ type: 'gearCrafted', uid: item.uid, time: now });
+      }
+      break;
+    }
   }
 
-  if (succeeded && mods.doubleChance > 0 && rng.chance(mods.doubleChance)) {
+  const doubleable = def.type !== 'craft' || def.output.kind === 'item';
+  if (succeeded && doubleable && mods.doubleChance > 0 && rng.chance(mods.doubleChance)) {
     for (const g of [...gained]) gained.push({ ...g });
   }
   if (succeeded) {
@@ -201,6 +243,12 @@ export function completeCycle(
   }
   runner.startedAt = nextStart;
   runner.nextAt = nextStart + duration;
+  // Stop if the next craft can't happen.
+  return cycleBlocker(state, def) === null;
+}
+
+function masteryLevelOf(state: GameState, def: ActionDef): number {
+  return levelForXp(state.skills[def.skillId].mastery[def.id] ?? 0, 99);
 }
 
 /** Average vendor value of one cycle's output (used for worker wages). */
@@ -223,6 +271,12 @@ export function expectedCycleValue(def: ActionDef, content: Content = CONTENT): 
       return ((def.picks[0] + def.picks[1]) / 2) * tableAvg(def.table);
     case 'thieve':
       return 0.7 * ((def.gold[0] + def.gold[1]) / 2);
+    case 'craft': {
+      const out = def.output;
+      if (out.kind === 'item') return price(out.itemId) * out.qty;
+      const baseId = out.kind === 'gear' ? out.baseId : content.uniques.get(out.uniqueId).baseId;
+      return content.bases.get(baseId).sellPrice;
+    }
   }
 }
 

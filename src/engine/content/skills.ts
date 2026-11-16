@@ -134,10 +134,30 @@ const base = (i: number) => ({
   xp: TIER_XP[i]!,
 });
 
-/** Main item at `mainWeight`% with the previous tier's item as a minor pick. */
-function tableWithPrevious(ids: string[], i: number, mainWeight: number): WeightedItem[] {
-  const table: WeightedItem[] = [{ itemId: ids[i]!, weight: mainWeight, min: 1, max: 1 }];
-  if (i > 0) table.push({ itemId: ids[i - 1]!, weight: 100 - mainWeight, min: 1, max: 1 });
+const FIBRES = [
+  'flax',
+  'hemp',
+  'cotton',
+  'jute',
+  'silkgrass',
+  'duskthread',
+  'gravesilk',
+  'sunfibre',
+  'starthread',
+  'wraithsilk',
+].map((x) => `item.${x}`);
+
+/** Herbalism: herbs (55, or 70 at tier 1), the previous tier's herb (15) and fibre for Tailoring (30). */
+function herbTable(i: number): WeightedItem[] {
+  const one = (itemId: string, weight: number): WeightedItem => ({
+    itemId,
+    weight,
+    min: 1,
+    max: 1,
+  });
+  const table = [one(HERB_IDS[i]!, i > 0 ? 55 : 70)];
+  if (i > 0) table.push(one(HERB_IDS[i - 1]!, 15));
+  table.push(one(FIBRES[i]!, 30));
   return table;
 }
 
@@ -268,7 +288,7 @@ export const SKILL_ACTIONS: ActionDef[] = [
     skillId: 'skill.herbalism',
     type: 'bundle',
     picks: [1, 3],
-    table: tableWithPrevious(HERB_IDS, i, 80),
+    table: herbTable(i),
   })),
   ...tiers.map((i): ActionDef => ({
     ...base(i),
@@ -284,6 +304,10 @@ export const SKILL_ACTIONS: ActionDef[] = [
     type: 'thieve',
     perception: TIER_LEVELS[i]! + 10,
     gold: THIEF_GOLD[i]!,
-    rares: [{ itemId: `item.${TRINKETS[i]}`, chance: 1 / 150 }],
+    rares: [
+      { itemId: `item.${TRINKETS[i]}`, chance: 1 / 150 },
+      // Until combat (Phase 4) drops hides, pickpocketing is the source of tier-1 pelts.
+      { itemId: 'item.rough_pelt', chance: 0.15 },
+    ],
   })),
 ];

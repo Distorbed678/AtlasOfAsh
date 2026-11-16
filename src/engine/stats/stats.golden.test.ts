@@ -78,20 +78,20 @@ describe('ModSet', () => {
 
 describe('character sheet', () => {
   it('class base + per level + Strength life', () => {
-    // Ironclad: 70 + 14 × 9 = 196; 50 Str → +20 life.
-    expect(sheet([], { level: 10 }).life.total).toBe(196);
-    expect(sheet([flat('str', 50)], { level: 10 }).life.total).toBe(216);
+    // Ironclad: 70 + 14 × 9 = 196, + 4 from the base 10 Str = 200; +50 Str (60 total) → +24 = 220.
+    expect(sheet([], { level: 10 }).life.total).toBe(200);
+    expect(sheet([flat('str', 50)], { level: 10 }).life.total).toBe(220);
   });
 
   it('Arcanist mana, ES and Int bonus; Zealot Spirit', () => {
     const a = computeCharacter({ classId: 'class.arcanist', level: 1, mods: [flat('int', 25)] });
-    expect(a.mana.total).toBe(70); // 60 + 2 × floor(25 / 5)
+    expect(a.mana.total).toBe(74); // 60 + 2 × floor((10 base + 25) / 5)
     expect(a.energyShield.total).toBe(20);
     expect(computeCharacter({ classId: 'class.zealot', level: 1, mods: [] }).spirit.total).toBe(30);
   });
 
-  it('accuracy = 6 × level + 5 per Dex', () => {
-    expect(sheet([flat('dex', 10)], { level: 5 }).accuracy.total).toBe(80);
+  it('accuracy = 6 × level + 5 per Dex (10 base Dex)', () => {
+    expect(sheet([flat('dex', 10)], { level: 5 }).accuracy.total).toBe(130); // 30 + 5 × 20
   });
 
   it('resists cap at 75, act penalty, max resist hard cap 90', () => {
@@ -110,9 +110,9 @@ describe('character sheet', () => {
   });
 
   it('regen and ES recharge', () => {
-    const s = sheet([flat('life', 930), flat('energyShield', 100), flat('esRechargeStart', 100)]);
+    const s = sheet([flat('life', 926), flat('energyShield', 100), flat('esRechargeStart', 100)]);
     expect(s.lifeRegenPerSec).toBeCloseTo(10); // 1% of 1000
-    expect(s.manaRegenPerSec).toBeCloseTo(0.6); // 2% of 30
+    expect(s.manaRegenPerSec).toBeCloseTo(0.68); // 2% of (30 + 4 from base Int)
     expect(s.esRechargePerSec).toBeCloseTo(12.5); // 12.5% of 100
     expect(s.esRechargeDelaySec).toBeCloseTo(2); // 4s / (1 + 100%)
   });
@@ -234,10 +234,10 @@ describe('damage pipeline', () => {
   });
 
   it('attacks can miss against evasion; spells cannot', () => {
-    // Ironclad L1 accuracy 6 + 5 × 200 Dex = 1006 vs 1000 evasion: 1.2 × 1006 / 1256 = 0.96115
+    // Ironclad L1 accuracy 6 + 5 × (10 + 200) Dex = 1056 vs 1000 evasion: 1.2 × 1056 / 1306 = 0.97029
     const s = sheet([flat('dex', 200)]);
     const target = { ...DUMMY, evasion: 1000 };
-    expect(computeHit(s, STRIKE, MACE, target).hitChance).toBeCloseTo(0.96115, 4);
+    expect(computeHit(s, STRIKE, MACE, target).hitChance).toBeCloseTo(0.97029, 4);
     expect(
       computeHit(s, spell({ baseDamage: { fire: { min: 1, max: 1 } } }), null, target).hitChance,
     ).toBe(1);
@@ -255,14 +255,14 @@ describe('damage pipeline', () => {
   });
 
   it('leech is capped at 20% of life per second', () => {
-    // 200 DPS spell, 10% leech → 20/s, but cap is 20% × 70 life = 14/s.
+    // 200 DPS spell, 10% leech → 20/s, but cap is 20% × 74 life = 14.8/s.
     const h = computeHit(
       sheet([flat('lifeLeech', 10)]),
       spell({ baseDamage: { fire: { min: 200, max: 200 } } }),
       null,
       DUMMY,
     );
-    expect(h.leechPerSecond).toBeCloseTo(14);
+    expect(h.leechPerSecond).toBeCloseTo(14.8);
   });
 });
 
@@ -316,7 +316,7 @@ describe('defence', () => {
 
   it('incoming hit: resists, evasion and block', () => {
     const s = sheet([
-      flat('life', 930),
+      flat('life', 926),
       flat('resist.fire', 50),
       flat('evasion', 1000),
       flat('block', 25),

@@ -32,6 +32,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       stats: { actionsCompleted: s.stats?.actionsCompleted ?? 0 },
     };
   },
+  // v2 → v3 (Phase 3): stash, equipment and item ids. Defaults are filled by normalizeState.
+  2: (s) => ({ ...s, version: 3 }),
 };
 
 export function migrate(

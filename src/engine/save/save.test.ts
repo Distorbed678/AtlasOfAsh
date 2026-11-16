@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyCommand } from '../commands';
 import { advance } from '../sim';
-import { createInitialState } from '../state';
+import { createInitialState, SAVE_VERSION } from '../state';
 import { decodeSave, deserializeState, encodeSave, serializeState } from './codec';
 import { migrate, type Migration } from './migrations';
 import { MAX_BACKUPS, SaveManager } from './saveManager';
@@ -76,7 +76,7 @@ describe('codec', () => {
       stats: { actionsCompleted: 12 },
     };
     const s = deserializeState(JSON.stringify(v1));
-    expect(s.version).toBe(2);
+    expect(s.version).toBe(SAVE_VERSION);
     expect(s.character.id).toBe('default');
     expect(s.gold).toBe(77);
     expect(s.bank.items).toEqual({});

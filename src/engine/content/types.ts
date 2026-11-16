@@ -2,9 +2,26 @@
  * Content definitions. Every def has a permanent `id` (see registry.ts).
  * Display names come from i18n using the id as the key.
  */
+import type { Mod, StatId } from '../stats/types';
 
 export type ItemCategory =
-  'ore' | 'log' | 'herb' | 'fish' | 'gem' | 'seed' | 'container' | 'valuable' | 'junk';
+  | 'ore'
+  | 'log'
+  | 'herb'
+  | 'fish'
+  | 'gem'
+  | 'seed'
+  | 'container'
+  | 'valuable'
+  | 'junk'
+  | 'fibre'
+  | 'hide'
+  | 'bar'
+  | 'plank'
+  | 'cloth'
+  | 'leather'
+  | 'dust'
+  | 'reagent';
 
 export interface WeightedItem {
   readonly itemId: string;
@@ -30,7 +47,16 @@ export interface ItemDef {
 }
 
 export type SkillId =
-  'skill.mining' | 'skill.woodcutting' | 'skill.herbalism' | 'skill.fishing' | 'skill.thieving';
+  | 'skill.mining'
+  | 'skill.woodcutting'
+  | 'skill.herbalism'
+  | 'skill.fishing'
+  | 'skill.thieving'
+  | 'skill.smithing'
+  | 'skill.woodworking'
+  | 'skill.tailoring'
+  | 'skill.jewelcrafting'
+  | 'skill.enchanting';
 
 export interface RareFind {
   readonly itemId: string;
@@ -40,7 +66,7 @@ export interface RareFind {
 
 export interface SkillDef {
   readonly id: SkillId;
-  readonly kind: 'gathering' | 'thieving';
+  readonly kind: 'gathering' | 'thieving' | 'artisan';
   /** Rolled after every completed action of this skill. */
   readonly rareFinds: readonly RareFind[];
 }
@@ -91,7 +117,22 @@ export interface ThieveAction extends ActionBase {
   readonly rares: readonly RareFind[];
 }
 
-export type ActionDef = SimpleAction | RockAction | CatchAction | BundleAction | ThieveAction;
+export type CraftOutput =
+  | { readonly kind: 'item'; readonly itemId: string; readonly qty: number }
+  | { readonly kind: 'gear'; readonly baseId: string }
+  | { readonly kind: 'unique'; readonly uniqueId: string };
+
+/** Artisan skills: consume inputs, produce stackable items or gear. */
+export interface CraftAction extends ActionBase {
+  readonly type: 'craft';
+  /** UI grouping, e.g. 'bars', 'weapons', 'armour'. */
+  readonly group: string;
+  readonly inputs: Readonly<Record<string, number>>;
+  readonly output: CraftOutput;
+}
+
+export type ActionDef =
+  SimpleAction | RockAction | CatchAction | BundleAction | ThieveAction | CraftAction;
 
 export type Attribute = 'str' | 'dex' | 'int';
 
@@ -109,7 +150,7 @@ export interface ClassDef {
   readonly id: string;
   readonly base: ClassBase;
   readonly attributes: readonly Attribute[];
-  /** Ids of the two favoured weapon types (weapon content arrives in Phase 3). */
+  /** Ids of the two favoured weapon types. */
   readonly weapons: readonly [string, string];
 }
 
@@ -127,4 +168,129 @@ export interface BuildingDef {
   readonly values: readonly number[];
   /** Cost of reaching tier 1, 2, … */
   readonly tiers: readonly BuildingTier[];
+}
+
+// ---------------------------------------------------------------- Equipment
+
+export type EquipSlot =
+  | 'mainHand'
+  | 'offHand'
+  | 'helmet'
+  | 'body'
+  | 'gloves'
+  | 'boots'
+  | 'belt'
+  | 'amulet'
+  | 'ring1'
+  | 'ring2';
+
+export const EQUIP_SLOTS: readonly EquipSlot[] = [
+  'mainHand',
+  'offHand',
+  'helmet',
+  'body',
+  'gloves',
+  'boots',
+  'belt',
+  'amulet',
+  'ring1',
+  'ring2',
+];
+
+export type WeaponClass =
+  | 'mace'
+  | 'axe'
+  | 'sword'
+  | 'dagger'
+  | 'claw'
+  | 'flail'
+  | 'sceptre'
+  | 'bow'
+  | 'crossbow'
+  | 'staff'
+  | 'quarterstaff'
+  | 'wand';
+
+export type BaseClass =
+  | WeaponClass
+  | 'shield'
+  | 'quiver'
+  | 'focus'
+  | 'helmet'
+  | 'body'
+  | 'gloves'
+  | 'boots'
+  | 'belt'
+  | 'ring'
+  | 'amulet';
+
+/** Defence profile of an armour piece: pure or hybrid. */
+export type DefenceType = 'ar' | 'ev' | 'es' | 'ar_ev' | 'ar_es' | 'ev_es';
+
+/** A modifier template on a base or unique (fixed value). */
+export interface ModTemplate {
+  readonly stat: StatId;
+  readonly kind: Mod['kind'];
+  readonly value: number;
+  readonly tags?: readonly string[];
+}
+
+export interface BaseItemDef {
+  readonly id: string;
+  readonly class: BaseClass;
+  readonly tier: number;
+  readonly twoHanded?: boolean;
+  readonly weapon?: {
+    readonly phys: readonly [number, number];
+    readonly attacksPerSecond: number;
+    readonly critChance: number;
+  };
+  readonly defence?: {
+    readonly armour?: number;
+    readonly evasion?: number;
+    readonly energyShield?: number;
+    readonly block?: number;
+  };
+  readonly defenceType?: DefenceType;
+  readonly implicits: readonly ModTemplate[];
+  readonly req: Readonly<Record<Attribute, number>>;
+  /** Used for affix eligibility and as skill tags for attacks (e.g. 'mace', 'melee'). */
+  readonly tags: readonly string[];
+  readonly sellPrice: number;
+}
+
+/** A rolled affix value range per stat for one tier. */
+export interface AffixTier {
+  /** Minimum item level for this tier. */
+  readonly ilvl: number;
+  readonly weight: number;
+  /** One [min, max] range per stat line of the affix. */
+  readonly ranges: readonly (readonly [number, number])[];
+}
+
+export interface AffixStatLine {
+  readonly stat: StatId;
+  readonly kind: Mod['kind'];
+  readonly tags?: readonly string[];
+  /** Local mods modify the item's own base stats (weapon damage, armour piece defences). */
+  readonly local?: boolean;
+}
+
+export interface AffixDef {
+  readonly id: string;
+  readonly kind: 'prefix' | 'suffix' | 'ashen';
+  /** Only one affix per group can be on an item. */
+  readonly group: string;
+  /** The item must have at least one of these tags. */
+  readonly allowedTags: readonly string[];
+  readonly lines: readonly AffixStatLine[];
+  /** Index 0 = worst tier (lowest ilvl); the last = best. Displayed as T1 = best. */
+  readonly tiers: readonly AffixTier[];
+}
+
+export interface UniqueDef {
+  readonly id: string;
+  readonly baseId: string;
+  /** Fixed affix-like lines; each rolls within its range. */
+  readonly lines: readonly (AffixStatLine & { readonly range: readonly [number, number] })[];
 }

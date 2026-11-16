@@ -1,5 +1,5 @@
 import { CONTENT, type Content } from '../content';
-import { cycleDuration, startRunner, wagePerCycle } from '../skills/actions';
+import { cycleBlocker, cycleDuration, startRunner, wagePerCycle } from '../skills/actions';
 import type { GameState, WorkerSlot } from '../state';
 import { workerSlotCount } from './town';
 
@@ -24,7 +24,7 @@ export function tryStartWorkerCycle(
   if (!w.actionId) return;
   const def = content.actions.get(w.actionId);
   const wage = wagePerCycle(state, def, content);
-  if (state.gold < wage) {
+  if (state.gold < wage || cycleBlocker(state, def)) {
     w.paused = true;
     w.runner = null;
     return;

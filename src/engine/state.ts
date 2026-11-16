@@ -1,9 +1,11 @@
 import { SKILL_IDS } from './content';
 import type { SkillId } from './content/types';
 import { deriveSeed, Rng, seedRng, type RngState } from './core/rng';
+import type { EquipSlot } from './content/types';
+import type { ItemInstance } from './items/types';
 
 /** Bump when the save shape changes, and add a migration in save/migrations.ts. */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export type CharacterMode = 'standard' | 'hardcore' | 'mortal';
 export const CHARACTER_MODES: readonly CharacterMode[] = ['standard', 'hardcore', 'mortal'];
@@ -43,8 +45,21 @@ export interface Runner {
 export interface WorkerSlot {
   actionId: string | null;
   runner: Runner | null;
-  /** True when the worker is assigned but couldn't be paid. */
+  /** True when the worker is assigned but couldn't start (no gold, materials or stash space). */
   paused: boolean;
+}
+
+export const STASH_TAB_SIZE = 40;
+
+export interface StashTab {
+  id: number;
+  name: string;
+  items: ItemInstance[];
+}
+
+export interface StashState {
+  tabs: StashTab[];
+  nextTabId: number;
 }
 
 export interface BankTab {
@@ -68,6 +83,7 @@ export interface GameStats {
   itemsDiscarded: number;
   wagesPaid: number;
   goldEarned: number;
+  itemsCrafted: number;
 }
 
 export interface GameState {
@@ -91,6 +107,11 @@ export interface GameState {
   workers: WorkerSlot[];
   /** Building id → built tier (missing = 0). */
   town: Record<string, number>;
+  /** Gear storage, bought with gold. */
+  stash: StashState;
+  equipment: Partial<Record<EquipSlot, ItemInstance>>;
+  /** Next item instance id (deterministic). */
+  nextItemUid: number;
   stats: GameStats;
 }
 
@@ -126,6 +147,9 @@ export function createInitialState(
     action: null,
     workers: [],
     town: {},
+    stash: { tabs: [{ id: 0, name: 'Stash', items: [] }], nextTabId: 1 },
+    equipment: {},
+    nextItemUid: 1,
     stats: {
       actionsCompleted: 0,
       workerActions: 0,
@@ -133,6 +157,7 @@ export function createInitialState(
       itemsDiscarded: 0,
       wagesPaid: 0,
       goldEarned: 0,
+      itemsCrafted: 0,
     },
   };
 }

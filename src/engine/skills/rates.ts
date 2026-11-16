@@ -12,8 +12,10 @@ export interface ActionRates {
   actionsPerHour: number;
   xpPerHour: number;
   goldPerHour: number;
-  /** Expected items per hour by item id (includes doubling and rare finds). */
+  /** Expected items per hour by item id (includes doubling and rare finds). Gear uses its base id. */
   itemsPerHour: Record<string, number>;
+  /** Materials consumed per hour (crafting). */
+  inputsPerHour: Record<string, number>;
   /** Average wall time per attempt including respawn/stun downtime. */
   msPerAction: number;
   successChance: number;
@@ -64,6 +66,12 @@ export function actionRates(
     case 'thieve':
       for (const r of def.rares) items[r.itemId] = (items[r.itemId] ?? 0) + p * r.chance;
       break;
+    case 'craft': {
+      const out = def.output;
+      if (out.kind === 'item') items[out.itemId] = out.qty * doubled;
+      else items[out.kind === 'gear' ? out.baseId : out.uniqueId] = 1;
+      break;
+    }
   }
   for (const r of content.skills.get(def.skillId).rareFinds) {
     items[r.itemId] = (items[r.itemId] ?? 0) + p * r.chance;
@@ -75,8 +83,12 @@ export function actionRates(
   const perHour = HOUR / msPerAction;
   const itemsPerHour: Record<string, number> = {};
   for (const [id, n] of Object.entries(items)) itemsPerHour[id] = n * perHour;
+  const inputsPerHour: Record<string, number> = {};
+  if (def.type === 'craft')
+    for (const [id, q] of Object.entries(def.inputs)) inputsPerHour[id] = q * perHour;
   return {
     actionsPerHour: perHour,
+    inputsPerHour,
     xpPerHour: xpBase * xpMult * perHour,
     goldPerHour: gold * perHour,
     itemsPerHour,

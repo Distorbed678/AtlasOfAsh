@@ -7,7 +7,9 @@ import { skillSystem } from './systems/skillSystem';
 export type SimEvent =
   | { type: 'actionComplete'; actionId: string; time: number }
   | { type: 'itemGained'; itemId: string; qty: number; time: number }
-  | { type: 'levelUp'; skillId: SkillId; level: number; time: number };
+  | { type: 'levelUp'; skillId: SkillId; level: number; time: number }
+  | { type: 'gearCrafted'; uid: number; time: number }
+  | { type: 'actionStopped'; actionId: string; time: number };
 
 export interface SimContext {
   readonly content: Content;
