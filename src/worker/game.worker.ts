@@ -1,4 +1,3 @@
-import { SaveManager } from '../engine/save/saveManager';
 import { GameHost, TICK_MS } from './host';
 import { IdbStore } from './idbStore';
 import type { FromWorker, ToWorker } from './protocol';
@@ -10,7 +9,7 @@ const ctx = self as unknown as {
 };
 
 const host = new GameHost({
-  saves: new SaveManager(new IdbStore(), 'default'),
+  store: new IdbStore(),
   now: () => Date.now(),
   post: (msg) => ctx.postMessage(msg),
   yieldToEventLoop: () => new Promise((r) => setTimeout(r, 0)),
