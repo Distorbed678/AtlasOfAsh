@@ -133,10 +133,31 @@ const base = (i: number) => ({
   xp: TIER_XP[i]!,
 });
 
-/** Main item weight 80/85 with the previous tier's item as a minor catch. */
+/** Main item at `mainWeight`% with the previous tier's item as a minor pick. */
 function tableWithPrevious(ids: string[], i: number, mainWeight: number): WeightedItem[] {
   const table: WeightedItem[] = [{ itemId: ids[i]!, weight: mainWeight, min: 1, max: 1 }];
   if (i > 0) table.push({ itemId: ids[i - 1]!, weight: 100 - mainWeight, min: 1, max: 1 });
+  return table;
+}
+
+export const JUNK_IDS = ['item.driftwood', 'item.old_boot', 'item.tangled_net'];
+
+/**
+ * Fishing: the spot's fish (80), the previous tier's fish (12), junk (6, split
+ * across three items) and a pearl (2). Tier 1 has no previous fish, so its main
+ * catch takes that weight.
+ */
+function fishTable(i: number): WeightedItem[] {
+  const one = (itemId: string, weight: number): WeightedItem => ({
+    itemId,
+    weight,
+    min: 1,
+    max: 1,
+  });
+  const table = [one(FISH_IDS[i]!, i > 0 ? 80 : 92)];
+  if (i > 0) table.push(one(FISH_IDS[i - 1]!, 12));
+  for (const junk of JUNK_IDS) table.push(one(junk, 2));
+  table.push(one(i < 5 ? 'item.river_pearl' : 'item.black_pearl', 2));
   return table;
 }
 
@@ -171,6 +192,9 @@ export const SKILL_ITEMS: ItemDef[] = [
     tier: i + 1,
     sellPrice: TRINKET_VALUE[i]!,
   })),
+  ...JUNK_IDS.map((id) => ({ id, category: 'junk' as const, tier: 1, sellPrice: 1 })),
+  { id: 'item.river_pearl', category: 'valuable', tier: 3, sellPrice: 60 },
+  { id: 'item.black_pearl', category: 'valuable', tier: 8, sellPrice: 250 },
   { id: 'item.gem_fragment', category: 'gem', tier: 1, sellPrice: 40 },
   { id: 'item.seed_pod', category: 'seed', tier: 1, sellPrice: 15 },
   { id: 'item.wild_seed', category: 'seed', tier: 1, sellPrice: 20 },
@@ -250,7 +274,7 @@ export const SKILL_ACTIONS: ActionDef[] = [
     id: `action.fish_${SPOTS[i]}`,
     skillId: 'skill.fishing',
     type: 'catch',
-    table: tableWithPrevious(FISH_IDS, i, 85),
+    table: fishTable(i),
   })),
   ...tiers.map((i): ActionDef => ({
     ...base(i),

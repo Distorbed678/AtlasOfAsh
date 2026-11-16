@@ -136,6 +136,7 @@ export const en = {
   'category.seed': 'Seed',
   'category.container': 'Container',
   'category.valuable': 'Valuable',
+  'category.junk': 'Junk',
 
   'town.title': 'Town',
   'town.intro': 'Invest gold and materials into buildings that improve your workers and storage.',

@@ -4,7 +4,7 @@
  */
 
 export type ItemCategory =
-  'ore' | 'log' | 'herb' | 'fish' | 'gem' | 'seed' | 'container' | 'valuable';
+  'ore' | 'log' | 'herb' | 'fish' | 'gem' | 'seed' | 'container' | 'valuable' | 'junk';
 
 export interface WeightedItem {
   readonly itemId: string;
