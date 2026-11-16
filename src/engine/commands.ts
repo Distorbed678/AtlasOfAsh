@@ -264,8 +264,9 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
       if (!hasItems(state, spec.reagents)) throw new CommandError('Missing reagents');
       // Work on a copy so a failed operation never leaves a half-changed item.
       const copy = structuredClone(loc.item);
+      let outcome: string | null;
       try {
-        applyEnchant(rngFor(state, 'enchant'), copy, cmd.op, cmd.infusionId, content);
+        outcome = applyEnchant(rngFor(state, 'enchant'), copy, cmd.op, cmd.infusionId, content);
       } catch (e) {
         throw new CommandError((e as Error).message);
       }
@@ -277,6 +278,7 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
         delete loc.item.uniqueValues;
       }
       state.skills['skill.enchanting'].xp += spec.xp;
+      state.lastEnchant = { uid: cmd.uid, op: cmd.op, outcome };
       return;
     }
   }

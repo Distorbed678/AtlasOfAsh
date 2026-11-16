@@ -11,7 +11,9 @@ export type Route =
   | { page: 'settings' }
   | { page: 'dev' }
   | { page: 'credits' }
-  | { page: 'codex' };
+  | { page: 'codex' }
+  | { page: 'stash' }
+  | { page: 'equipment' };
 
 const SIMPLE = [
   'overview',
@@ -22,6 +24,8 @@ const SIMPLE = [
   'dev',
   'credits',
   'codex',
+  'stash',
+  'equipment',
 ] as const;
 
 /** `skill.mining` ↔ `#/skill/mining` */

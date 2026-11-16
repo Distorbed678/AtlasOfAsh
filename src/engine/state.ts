@@ -112,6 +112,8 @@ export interface GameState {
   equipment: Partial<Record<EquipSlot, ItemInstance>>;
   /** Next item instance id (deterministic). */
   nextItemUid: number;
+  /** The most recent Enchanting result (for UI feedback). */
+  lastEnchant?: { uid: number; op: string; outcome: string | null };
   stats: GameStats;
 }
 

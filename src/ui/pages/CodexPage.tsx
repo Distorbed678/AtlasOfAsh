@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
+import { computeItem, equipmentMods, UNARMED } from '../../engine/items/itemStats';
 import { computeCharacter, type CharacterSheet } from '../../engine/stats/character';
+import { computeHit, type SkillStats, type TargetStats } from '../../engine/stats/damage';
 import { RESIST_TYPES, type StatBreakdown } from '../../engine/stats/types';
 import { nameOf, t, type TKey } from '../../i18n';
 import { formatNumber } from '../../shared/format';
@@ -8,6 +10,8 @@ import { useGameState } from '../bridge';
 import { Breakdown } from '../components/Breakdown';
 import { TestBench } from '../components/TestBench';
 import { useFlag } from '../flags';
+import { itemName } from '../items';
+import { formatPercent } from '../../shared/format';
 
 interface Row {
   key: string;
@@ -116,6 +120,7 @@ function sections(sheet: CharacterSheet): { title: TKey; rows: Row[] }[] {
 
 export function CodexPage() {
   const character = useGameState((s) => s.character);
+  const equipment = useGameState((s) => s.equipment);
   const devTools = useFlag('devTools');
   const benchMods = useBench((s) => s.mods);
   const benchOn = devTools && benchMods.length > 0;
@@ -124,9 +129,12 @@ export function CodexPage() {
       computeCharacter({
         classId: character.classId,
         level: 1,
-        mods: benchOn ? benchModsToMods(benchMods) : [],
+        mods: [
+          ...equipmentMods(equipment, itemName),
+          ...(benchOn ? benchModsToMods(benchMods) : []),
+        ],
       }),
-    [character.classId, benchOn, benchMods],
+    [character.classId, benchOn, benchMods, equipment],
   );
   const [selected, setSelected] = useState<string>('life');
   const all = sections(sheet);
@@ -180,7 +188,41 @@ export function CodexPage() {
         </aside>
       </div>
 
+      <BasicAttack sheet={sheet} />
       {devTools && <TestBench sheet={sheet} />}
     </div>
+  );
+}
+
+const BASIC_ATTACK: SkillStats = { id: 'basic_attack', tags: ['attack'], damageEffectiveness: 1 };
+const STANDARD_TARGET: TargetStats = {
+  life: 500,
+  armour: 100,
+  evasion: 100,
+  resists: { fire: 0, cold: 0, lightning: 0, chaos: 0 },
+};
+
+/** DPS of a plain attack with the equipped weapon, so gear upgrades show right away. */
+function BasicAttack({ sheet }: { sheet: CharacterSheet }) {
+  const main = useGameState((s) => s.equipment.mainHand);
+  const weapon = main ? computeItem(main, itemName(main)).weapon : undefined;
+  const hit = computeHit(sheet, BASIC_ATTACK, weapon ?? UNARMED, STANDARD_TARGET);
+  return (
+    <section className="panel panel-wide">
+      <h2 className="section-title">
+        {t('codex.basicAttack')} — {main && weapon ? itemName(main) : t('codex.unarmed')}
+      </h2>
+      <div className="bench-dps">{n(hit.dps)} DPS</div>
+      <div className="small dim">
+        {t('codex.dpsLine', {
+          dps: n(hit.dps),
+          hit: n(hit.avgHit),
+          aps: n(hit.usesPerSecond),
+          crit: formatPercent(hit.critChance, 1),
+          chance: formatPercent(hit.hitChance, 1),
+        })}
+      </div>
+      <p className="faint small">{t('codex.basicAttackNote')}</p>
+    </section>
   );
 }
