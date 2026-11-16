@@ -49,7 +49,7 @@ describe('actionRates matches the simulation', () => {
     const def = action('action.chop_pine');
     const r = actionRates(s, def, { kind: 'worker', slot: 0 });
     expect(r.actionsPerHour).toBeCloseTo(HOUR / Math.round(5000 / 0.3));
-    expect(r.xpPerHour).toBeCloseTo(r.actionsPerHour * 10 * 0.1);
+    expect(r.xpPerHour).toBeCloseTo(r.actionsPerHour * def.xp * 0.1);
   });
 
   it('fishing tables include junk and pearls', () => {

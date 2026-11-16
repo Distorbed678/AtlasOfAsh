@@ -105,7 +105,7 @@ describe('summary', () => {
     expect(sum.actionsCompleted).toBe(s.stats.actionsCompleted);
     expect(sum.items.find((i) => i.itemId === 'item.pine_log')!.delta).toBeGreaterThanOrEqual(720);
     const wc = sum.skills.find((g) => g.skillId === 'skill.woodcutting')!;
-    expect(wc.xp).toBeGreaterThan(7000);
+    expect(wc.xp).toBeGreaterThan(4500); // 720 actions × 7 XP at base speed
     expect(wc.levelAfter).toBeGreaterThan(wc.levelBefore);
   });
 });

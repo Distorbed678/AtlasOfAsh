@@ -6,7 +6,8 @@ import type { ActionDef, ItemDef, SkillDef, WeightedItem } from './types';
  */
 export const TIER_LEVELS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90] as const;
 export const TIER_DURATION_MS = [5000, 5500, 6500, 7000, 8000, 9000, 9500, 10500, 11000, 12000];
-export const TIER_XP = [10, 18, 28, 40, 55, 75, 98, 125, 160, 200];
+// Uniformly 1.5x slower than the first draft (10, 18, 28 … 200), per the Phase 1 pacing review.
+export const TIER_XP = [7, 12, 19, 27, 37, 50, 65, 83, 107, 133];
 export const TIER_VALUE = [1, 3, 5, 8, 12, 18, 26, 36, 50, 70];
 
 const ORES = [

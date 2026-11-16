@@ -107,7 +107,7 @@ describe('workers', () => {
     const s = withWorker(10_000);
     advance(s, HOUR);
     const xp = s.skills['skill.woodcutting'].xp;
-    expect(xp).toBeCloseTo(s.stats.workerActions * 10 * 0.1);
+    expect(xp).toBeCloseTo(s.stats.workerActions * action('action.chop_pine').xp * 0.1);
     expect(s.skills['skill.woodcutting'].mastery).toEqual({});
   });
 

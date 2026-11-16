@@ -114,6 +114,7 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Town (Phase 1) | Guild Hall (worker slots), Workshop (efficiency + wage), Training Yard (worker XP share), Vault (bank slots). Costs are **gold + gathered materials** |
 | Page reload | Always returns to the **character select** screen (no auto-continue) |
 | Tier-1 wages | Whole-gold rounding makes tier-1 workers break even (not 120%); accepted, since workers still never profit |
+| XP pacing | Uniformly **1.5× slower** than the first draft (tier XP 7 → 133). Pacing report: level 99 in ~315–373 h of active play per skill (~2 weeks of 24/7 idling); level 50 in ~7–9 h. Re-run with `PACING=1 npx vitest run src/engine/balance` |
 
 ---
 
