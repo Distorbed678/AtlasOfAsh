@@ -24,7 +24,9 @@ export function formatNumber(value: number, digits = 3): string {
     rounded /= 1000;
     tier++;
   }
-  return sign + trimZeros(rounded.toFixed(Math.max(0, digits - intDigits(rounded)))) + SUFFIXES[tier];
+  return (
+    sign + trimZeros(rounded.toFixed(Math.max(0, digits - intDigits(rounded)))) + SUFFIXES[tier]
+  );
 }
 
 /** Full value with thousands separators, e.g. for hover tooltips: 1234567 → "1,234,567". */
@@ -41,7 +43,8 @@ export function formatPercent(fraction: number, decimals = 1): string {
 export function formatDuration(ms: number): string {
   if (!Number.isFinite(ms) || ms < 0) return '—';
   const totalSec = Math.floor(ms / 1000);
-  if (totalSec < 60) return ms < 10_000 && ms % 1000 !== 0 ? `${(ms / 1000).toFixed(1)}s` : `${totalSec}s`;
+  if (totalSec < 60)
+    return ms < 10_000 && ms % 1000 !== 0 ? `${(ms / 1000).toFixed(1)}s` : `${totalSec}s`;
   const d = Math.floor(totalSec / 86_400);
   const h = Math.floor((totalSec % 86_400) / 3600);
   const m = Math.floor((totalSec % 3600) / 60);

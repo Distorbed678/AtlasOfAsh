@@ -28,11 +28,13 @@ export class ContentRegistry<T extends HasId> {
 
   add(entry: T): void {
     const { id } = entry;
-    if (!ID_PATTERN.test(id)) throw new Error(`Invalid content id "${id}" (expected category.name)`);
+    if (!ID_PATTERN.test(id))
+      throw new Error(`Invalid content id "${id}" (expected category.name)`);
     if (!id.startsWith(`${this.category}.`))
       throw new Error(`Content id "${id}" must start with "${this.category}."`);
     if (this.byId.has(id)) throw new Error(`Duplicate content id "${id}"`);
-    if (RETIRED_IDS.has(id)) throw new Error(`Content id "${id}" is retired and must not be reused`);
+    if (RETIRED_IDS.has(id))
+      throw new Error(`Content id "${id}" is retired and must not be reused`);
     this.byId.set(id, entry);
   }
 

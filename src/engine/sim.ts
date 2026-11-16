@@ -40,7 +40,11 @@ export interface AdvanceResult {
 }
 
 /** Advance the simulation to `toTime` (absolute sim ms). Mutates state. */
-export function advance(state: GameState, toTime: number, opts: AdvanceOptions = {}): AdvanceResult {
+export function advance(
+  state: GameState,
+  toTime: number,
+  opts: AdvanceOptions = {},
+): AdvanceResult {
   if (toTime < state.time) throw new Error(`Cannot advance backwards (${state.time} -> ${toTime})`);
   const systems = opts.systems ?? SYSTEMS;
   const ctx: SimContext = {

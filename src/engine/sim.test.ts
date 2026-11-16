@@ -91,7 +91,9 @@ describe('summary', () => {
     const sum = summarize(before, takeSnapshot(s));
     expect(sum.durationMs).toBe(HOUR);
     expect(sum.actionsCompleted).toBe(1200);
-    expect(sum.items.find((i) => i.itemId === 'item.demo_ember')!.delta).toBeGreaterThanOrEqual(1200);
+    expect(sum.items.find((i) => i.itemId === 'item.demo_ember')!.delta).toBeGreaterThanOrEqual(
+      1200,
+    );
   });
 });
 

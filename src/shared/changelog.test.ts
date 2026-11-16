@@ -18,7 +18,11 @@ describe('parseChangelog', () => {
 `;
     const r = parseChangelog(md);
     expect(r).toHaveLength(2);
-    expect(r[0]).toEqual({ version: 'Unreleased', date: undefined, sections: [{ title: 'Changes', items: ['Loose item'] }] });
+    expect(r[0]).toEqual({
+      version: 'Unreleased',
+      date: undefined,
+      sections: [{ title: 'Changes', items: ['Loose item'] }],
+    });
     expect(r[1]!.date).toBe('2026-12-01');
     expect(r[1]!.sections.map((s) => s.title)).toEqual(['Added', 'Fixed']);
     expect(r[1]!.sections[0]!.items).toEqual(['Mining', 'Workers']);

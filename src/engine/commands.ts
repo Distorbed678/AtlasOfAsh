@@ -12,7 +12,11 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
     case 'startAction': {
       const def = content.actions.get(cmd.actionId);
       if (state.action?.actionId === def.id) return;
-      state.action = { actionId: def.id, startedAt: state.time, nextAt: state.time + def.durationMs };
+      state.action = {
+        actionId: def.id,
+        startedAt: state.time,
+        nextAt: state.time + def.durationMs,
+      };
       return;
     }
     case 'stopAction':

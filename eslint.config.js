@@ -20,7 +20,10 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
     },
   },
   {
@@ -29,7 +32,14 @@ export default tseslint.config(
     rules: {
       'no-restricted-imports': [
         'error',
-        { patterns: [{ group: ['react', 'react-dom', '**/ui/**', '**/worker/**'], message: 'engine must stay pure (no UI/worker imports)' }] },
+        {
+          patterns: [
+            {
+              group: ['react', 'react-dom', '**/ui/**', '**/worker/**'],
+              message: 'engine must stay pure (no UI/worker imports)',
+            },
+          ],
+        },
       ],
     },
   },
