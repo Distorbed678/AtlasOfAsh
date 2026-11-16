@@ -241,7 +241,7 @@ Each phase runs on its own branch (`phase-N-name`), with one commit per feature,
 
 | # | Phase | Deliverables |
 |---|---|---|
-| 0 | **Foundation** | Vite/React/TS scaffold, lint/test, seeded RNG, event scheduler, Worker host, save/load + migrations + backups, offline catch-up framework, dev console, UI shell (sidebar, dark theme, responsive), number formatting, **GitHub Pages deploy + CI**, T3 run scripts |
+| 0 | **Foundation** ✅ | Vite/React/TS scaffold, lint/test, seeded RNG, event scheduler, Worker host, save/load + migrations + backups, offline catch-up framework, dev console, UI shell (sidebar, dark theme, responsive), number formatting, **GitHub Pages deploy + CI**, T3 run scripts |
 | 1 | **Skilling core** | Character creation (realm + mode), skill framework (XP curve, mastery + pool), bank, gold, vendor; Mining, Woodcutting, Herbalism, Fishing, Thieving; **workers** + first Town buildings |
 | 2 | **Stat engine** | Modifiers, tags, damage/defence pipeline, entropy evasion, provenance; golden tests; first **Codex** panel |
 | 3 | **Items and artisan skills** | Bases, affixes, rarities, uniques framework, tooltips, equipment; Smithing, Tailoring, Woodworking, Jewelcrafting; **Enchanting**; Ashen Brand |
