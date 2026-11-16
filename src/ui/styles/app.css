@@ -1342,3 +1342,226 @@ code {
   align-items: center;
   gap: 6px;
 }
+
+/* =================== Phase 2: Codex =================== */
+
+.codex-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--gap);
+  align-items: start;
+}
+
+.codex-sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--gap);
+}
+
+.codex-detail {
+  position: sticky;
+  top: 0;
+  align-items: stretch;
+}
+
+.stat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stat-line {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.stat-line:hover:not(:disabled) {
+  background: var(--panel-hover);
+}
+
+.stat-line.selected {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.stat-line:disabled {
+  cursor: default;
+}
+
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.breakdown .sub-title {
+  margin-top: 0;
+}
+
+.bd-head {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  margin-top: 8px;
+}
+
+.bd-list {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.bd-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.bd-value {
+  min-width: 56px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+}
+
+.bd-source {
+  color: var(--text);
+}
+
+.bd-tags {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+}
+
+.bd-formula {
+  margin-top: 10px;
+  padding: 6px 8px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  word-break: break-word;
+}
+
+.bench-mods {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.bench-mod {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.4fr) 110px 90px minmax(100px, 1fr) auto;
+  gap: 6px;
+}
+
+.bench-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.bench-target {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.bench-target label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--text-dim);
+}
+
+.bench-dps {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--accent-strong);
+}
+
+.bench-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--gap);
+  width: 100%;
+}
+
+.bench-packets {
+  width: 100%;
+}
+
+.scroll-x {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th,
+.data-table td {
+  padding: 5px 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  text-align: left;
+}
+
+.data-table th {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.dmg-physical {
+  color: #cfc8bf;
+}
+.dmg-fire {
+  color: #e8784a;
+}
+.dmg-cold {
+  color: #7fb8e8;
+}
+.dmg-lightning {
+  color: #e8d45a;
+}
+.dmg-chaos {
+  color: #c27be0;
+}
+
+@media (max-width: 900px) {
+  .codex-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .codex-detail {
+    position: static;
+  }
+
+  .bench-mod {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -174,6 +174,13 @@ describe('damage pipeline', () => {
     expect(h.byType.fire.avg).toBeCloseTo(40);
   });
 
+  it('conversion is not reported for damage types the hit does not have', () => {
+    const s = sheet([flat('convert.physical.fire', 50)]);
+    const h = computeHit(s, spell({ baseDamage: { cold: { min: 10, max: 10 } } }), null, DUMMY);
+    expect(h.conversion).toEqual({});
+    expect(h.byType.cold.avg).toBeCloseTo(10);
+  });
+
   it('chained conversion: physical → lightning → fire', () => {
     // 100 phys: 50% → lightning; then all lightning (50) converts 100% → fire.
     const s = sheet([flat('convert.physical.lightning', 50), flat('convert.lightning.fire', 100)]);

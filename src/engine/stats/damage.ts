@@ -156,7 +156,8 @@ export function computeHit(
     const modScale = modTotal > remaining ? remaining / modTotal : 1;
     const pcts = targets.map((_, j) => skillPct[j]! * skillScale + modPct[j]! * modScale);
     const totalPct = pcts.reduce((a, b) => a + b, 0);
-    if (totalPct <= 0) continue;
+    // Only record conversion for damage types this hit actually has.
+    if (totalPct <= 0 || !raw.some((p) => p.type === from)) continue;
     targets.forEach((to, j) => {
       if (pcts[j]! > 0) conversion[`${from}.${to}`] = pcts[j]!;
     });

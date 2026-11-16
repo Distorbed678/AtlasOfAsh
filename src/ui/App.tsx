@@ -9,6 +9,7 @@ import { WhatsNewModal } from './components/WhatsNew';
 import { useFlag } from './flags';
 import { BankPage } from './pages/BankPage';
 import { CharacterSelect } from './pages/CharacterSelect';
+import { CodexPage } from './pages/CodexPage';
 import { CreditsPage } from './pages/CreditsPage';
 import { DevPage } from './pages/DevPage';
 import { OverviewPage } from './pages/OverviewPage';
@@ -84,6 +85,8 @@ function Page({ route, onWhatsNew }: { route: Route; onWhatsNew: () => void }) {
       return <SettingsPage />;
     case 'credits':
       return <CreditsPage />;
+    case 'codex':
+      return <CodexPage />;
     case 'dev':
       if (devTools) return <DevPage />;
       return <OverviewPage onWhatsNew={onWhatsNew} />;

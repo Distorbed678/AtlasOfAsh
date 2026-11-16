@@ -11,7 +11,6 @@ import { Icon } from './Icon';
 
 /** Systems on the roadmap, shown greyed out with the phase that delivers them. */
 const UPCOMING: { key: TKey; phase: number }[] = [
-  { key: 'nav.upcoming.character', phase: 3 },
   { key: 'nav.upcoming.crafting', phase: 3 },
   { key: 'nav.upcoming.combat', phase: 4 },
   { key: 'nav.upcoming.passives', phase: 6 },
@@ -60,6 +59,7 @@ export function Sidebar({ route, open, onNavigate }: Props) {
         )}
         {link({ page: 'town' }, t('nav.town'), 'nav.town')}
         {link({ page: 'workers' }, t('nav.workers'), 'nav.workers')}
+        {link({ page: 'codex' }, t('nav.codex'), 'nav.codex')}
       </div>
       <div className="nav-group">
         <div className="nav-group-title">{t('nav.group.skills')}</div>

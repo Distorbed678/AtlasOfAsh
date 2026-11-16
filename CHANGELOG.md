@@ -2,6 +2,15 @@
 
 All notable changes to Atlas of Ash. Shown in-game under "What's new".
 
+## [0.2.0] - 2026-11-16
+
+### Added
+
+- The Codex: a character sheet showing life, mana, Spirit, energy shield, attributes, defences, resistances (with caps and act penalties), recovery and offence. Select any stat to see exactly where every point comes from.
+- Class starting stats: each class now has its own life, mana, energy shield and Spirit, growing with level.
+- The full damage and defence engine behind combat: added damage, conversion, gain-as-extra, increased vs more, crits, attack/cast speed, accuracy vs evasion, armour by hit size, resistances and penetration, leech, and threshold-based ailments (ignite, shock, chill, freeze; bleed and poison by chance).
+- Dev test bench in the Codex (with `?flags=devTools`): add any modifier, choose a test skill and target dummy, and see the full calculation.
+
 ## [0.1.1] - 2026-11-16
 
 ### Added
