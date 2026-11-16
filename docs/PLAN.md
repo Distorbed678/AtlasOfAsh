@@ -321,3 +321,5 @@ Each phase runs on its own branch (`phase-N-name`), with one commit per feature,
 1. **Ascendancy names** and the detailed nodes for each of the 24 themes (Phase 7).
 2. **First league mechanic** (Phase 10).
 3. Exact Town costs and wage numbers (tuned during Phases 1 and 8).
+4. **Phase 4:** a level-1 character has only ~56 accuracy (6 × level + 5 × 10 Dex). Decide early monsters' evasion, or a higher starting accuracy, so early hit chance feels right.
+5. **Phase 4:** monster hides unlock leather tiers 2–10 (evasion armour, leather hybrids and belts above tier 1).
