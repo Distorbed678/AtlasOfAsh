@@ -155,6 +155,25 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Starting attributes | **All characters start at 10 Str / 10 Dex / 10 Int** |
 | Equipping (pre-combat) | Gear feeds the character sheet; the Codex shows a **Basic Attack** with the equipped weapon. Attribute requirements enforced; level requirements wait for Phase 4 |
 
+### 1.11 Phase 4 decisions (combat)
+| Area | Decision |
+|---|---|
+| Early skills | **Basic Attack** (weapon) for everyone; **Basic Spell** when holding a spell weapon (wand, staff, sceptre, focus). They become the fallback once gems arrive |
+| Mana | Basic Attack is free; Basic Spell costs 4 + 1 per level mana. Out of mana → falls back to Basic Attack |
+| Zones | **Act 1 — The Cinder Coast**, 8 zones: Ashfall Beach, Drowned Hamlet, Saltmarsh, Smugglers' Caves, Blackened Woods, Charcoal Ridge, the Hollow Lighthouse, the Ember Gate. The act boss gate comes in Phase 7 |
+| Monsters | Families with roles (drowned dead: slow, hard physical hits · ash wisps: fast elemental hits, high evasion · coastal brutes: big life and armour · cave crawlers: fast, weak). ~15% magic (1–2 mods), ~3% rare (3–4 mods) |
+| Monster evasion | Scaled so a matching-level character with no accuracy gear hits ~85% |
+| Combat XP | **No level penalty**: monsters give XP by level and rarity |
+| Death (softcore) | Lose **10% of the current level's XP** (can't drop a level) and the trip bag; **combat stops** |
+| Death (HC/Mortal) | Hardcore → becomes Standard with a "fell in Hardcore" badge. Mortal → save deleted; a **memorial** (name, class, level, cause, time played) stays on the character screen |
+| Retreat | Manual **"Attempt to retreat"** button: success chance = current life %. Success stops combat and banks the bag; failure → 15s cooldown |
+| Trip bag | 100 stacks (gear counts individually). When full, new drops are lost. A manual **"Bank loot"** button banks instantly but **restarts both attack timers**. Stopping combat banks |
+| Waystone | **Not available by default**: a Town building whose first tier auto-banks every **60 minutes**, shortened by later tiers |
+| Drops | Gold, gear (zone tier; item level = monster level), tier-matched hides, Enchanting reagents and Arcane Dust, and **uncut gems** (stockpiled for Phase 5) |
+| Flasks | **Equipment with charges** in 5 flask slots, crafted by **Alchemy**: life, mana and 4 utility flasks (Granite +armour, Swiftness +speed, Warding +resists, Cleansing ailment immunity). +1 charge per kill, +0.2 per hit taken. Per-slot auto-use rules. Flask affixes; Enchanting works on them |
+| Loot filter | **Full rule editor + 3 presets** (Keep everything, Early game, Rares only). Rules run before loot enters the bag |
+| Combat UI | Duel view (bars, attack progress, flask charges), combat log, trip bag with bank button, zone panel with predicted kills/h, XP/h, loot/h and death risk |
+
 ---
 
 ## 2. Classes
