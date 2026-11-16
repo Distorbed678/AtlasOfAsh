@@ -1,6 +1,5 @@
-import { CONTENT } from '../../engine/content';
-import { t, tDynamic } from '../../i18n';
-import { formatDuration } from '../../shared/format';
+import { nameOf, t } from '../../i18n';
+import { formatDuration, formatNumber } from '../../shared/format';
 import { useGame } from '../bridge';
 import { Modal } from './Modal';
 import { Num } from './Num';
@@ -10,9 +9,8 @@ export function AwayModal() {
   const away = useGame((s) => s.away);
   const dismiss = useGame((s) => s.dismissAway);
   if (!away) return null;
-  const { summary } = away;
-  const empty =
-    summary.actionsCompleted === 0 && summary.items.length === 0 && summary.goldDelta === 0;
+  const { summary: s } = away;
+  const empty = s.skills.length === 0 && s.items.length === 0 && s.goldDelta === 0;
 
   return (
     <Modal
@@ -24,23 +22,74 @@ export function AwayModal() {
         </button>
       }
     >
-      <p>{t('away.duration', { time: formatDuration(summary.durationMs) })}</p>
+      <p>{t('away.duration', { time: formatDuration(s.durationMs) })}</p>
       {empty ? (
         <p className="dim">{t('away.nothing')}</p>
       ) : (
         <>
-          <p className="dim">{t('away.actions', { n: summary.actionsCompleted })}</p>
-          <ul className="gain-list">
-            {summary.items.map((i) => (
-              <li key={i.itemId}>
-                <span>{tDynamic(CONTENT.items.tryGet(i.itemId)?.nameKey ?? i.itemId)}</span>
-                <span className={i.delta > 0 ? 'gain' : 'loss'}>
-                  {i.delta > 0 ? '+' : ''}
-                  <Num value={i.delta} />
-                </span>
-              </li>
-            ))}
-          </ul>
+          {s.skills.length > 0 && (
+            <>
+              <h3 className="sub-title">{t('away.skills')}</h3>
+              <ul className="gain-list">
+                {s.skills.map((g) => (
+                  <li key={g.skillId}>
+                    <span>
+                      {nameOf(g.skillId)}
+                      {g.levelAfter > g.levelBefore && (
+                        <span className="good small">
+                          {' '}
+                          {t('away.levelUp', { from: g.levelBefore, to: g.levelAfter })}
+                        </span>
+                      )}
+                    </span>
+                    <span className="gain">
+                      +<Num value={Math.floor(g.xp)} /> XP
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {(s.goldDelta !== 0 || s.wagesPaid > 0) && (
+            <>
+              <h3 className="sub-title">{t('away.gold')}</h3>
+              <ul className="gain-list">
+                <li>
+                  <span>{t('away.gold')}</span>
+                  <span className={s.goldDelta >= 0 ? 'gain' : 'loss'}>
+                    {s.goldDelta >= 0 ? '+' : ''}
+                    <Num value={s.goldDelta} />
+                  </span>
+                </li>
+                {s.wagesPaid > 0 && (
+                  <li className="dim small">
+                    <span>{t('away.wages', { gold: formatNumber(s.wagesPaid) })}</span>
+                  </li>
+                )}
+              </ul>
+            </>
+          )}
+          {s.items.length > 0 && (
+            <>
+              <h3 className="sub-title">{t('away.items')}</h3>
+              <ul className="gain-list">
+                {s.items.map((i) => (
+                  <li key={i.itemId}>
+                    <span>{nameOf(i.itemId)}</span>
+                    <span className={i.delta > 0 ? 'gain' : 'loss'}>
+                      {i.delta > 0 ? '+' : ''}
+                      <Num value={i.delta} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {s.itemsDiscarded > 0 && (
+            <p className="bad small">
+              {t('away.discarded', { n: formatNumber(s.itemsDiscarded) })}
+            </p>
+          )}
         </>
       )}
     </Modal>

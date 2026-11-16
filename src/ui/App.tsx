@@ -1,41 +1,50 @@
 import { useState } from 'react';
+import { t } from '../i18n';
 import { useGame } from './bridge';
 import { AwayModal, CatchUpOverlay } from './components/AwayModal';
 import { Sidebar } from './components/Sidebar';
+import { Toasts } from './components/Toasts';
 import { TopBar } from './components/TopBar';
 import { WhatsNewModal } from './components/WhatsNew';
-import { shouldAutoShowWhatsNew } from './whatsNewSeen';
 import { useFlag } from './flags';
 import { BankPage } from './pages/BankPage';
+import { CharacterSelect } from './pages/CharacterSelect';
 import { DevPage } from './pages/DevPage';
-import { HomePage } from './pages/HomePage';
+import { OverviewPage } from './pages/OverviewPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { useRoute } from './router';
-import { t } from '../i18n';
+import { SkillPage } from './pages/SkillPage';
+import { TownPage } from './pages/TownPage';
+import { WorkersPage } from './pages/WorkersPage';
+import { useRoute, type Route } from './router';
+import { shouldAutoShowWhatsNew } from './whatsNewSeen';
 
 export function App() {
-  const route = useRoute();
-  const loaded = useGame((s) => s.state !== null);
-  const workerError = useGame((s) => s.workerError);
-  const dismissError = useGame((s) => s.dismissError);
-  const devTools = useFlag('devTools');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const ready = useGame((s) => s.ready);
+  const hasCharacter = useGame((s) => s.state !== null);
   const [whatsNew, setWhatsNew] = useState(shouldAutoShowWhatsNew);
 
-  let page;
-  switch (route) {
-    case 'bank':
-      page = <BankPage />;
-      break;
-    case 'settings':
-      page = <SettingsPage />;
-      break;
-    case 'dev':
-      page = devTools ? <DevPage /> : <HomePage onWhatsNew={() => setWhatsNew(true)} />;
-      break;
-    default:
-      page = <HomePage onWhatsNew={() => setWhatsNew(true)} />;
-  }
+  return (
+    <>
+      {!ready ? (
+        <div className="loading">{t('app.loading')}</div>
+      ) : hasCharacter ? (
+        <GameShell onWhatsNew={() => setWhatsNew(true)} />
+      ) : (
+        <CharacterSelect />
+      )}
+      <CatchUpOverlay />
+      <AwayModal />
+      {whatsNew && <WhatsNewModal onClose={() => setWhatsNew(false)} />}
+      <Toasts />
+    </>
+  );
+}
+
+function GameShell({ onWhatsNew }: { onWhatsNew: () => void }) {
+  const route = useRoute();
+  const workerError = useGame((s) => s.workerError);
+  const dismissError = useGame((s) => s.dismissError);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="app">
@@ -52,12 +61,30 @@ export function App() {
           </div>
         )}
         <main className="content">
-          {loaded ? page : <div className="loading">{t('app.title')}…</div>}
+          <Page route={route} onWhatsNew={onWhatsNew} />
         </main>
       </div>
-      <CatchUpOverlay />
-      <AwayModal />
-      {whatsNew && <WhatsNewModal onClose={() => setWhatsNew(false)} />}
     </div>
   );
+}
+
+function Page({ route, onWhatsNew }: { route: Route; onWhatsNew: () => void }) {
+  const devTools = useFlag('devTools');
+  switch (route.page) {
+    case 'skill':
+      return <SkillPage key={route.skillId} skillId={route.skillId} />;
+    case 'bank':
+      return <BankPage />;
+    case 'town':
+      return <TownPage />;
+    case 'workers':
+      return <WorkersPage />;
+    case 'settings':
+      return <SettingsPage />;
+    case 'dev':
+      if (devTools) return <DevPage />;
+      return <OverviewPage onWhatsNew={onWhatsNew} />;
+    case 'overview':
+      return <OverviewPage onWhatsNew={onWhatsNew} />;
+  }
 }

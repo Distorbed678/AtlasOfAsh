@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONTENT } from '../engine/content';
-import { en } from './en';
-import { t, tDynamic } from './index';
+import { hasTranslation, t, tDynamic } from './index';
 
 describe('i18n', () => {
   it('interpolates params', () => {
@@ -12,9 +11,18 @@ describe('i18n', () => {
     expect(tDynamic('nope.missing')).toBe('nope.missing');
   });
 
-  it('every content nameKey has an English string', () => {
-    const keys = new Set(Object.keys(en));
-    for (const item of CONTENT.items.all()) expect(keys.has(item.nameKey)).toBe(true);
-    for (const action of CONTENT.actions.all()) expect(keys.has(action.nameKey)).toBe(true);
+  it('every piece of content has an English name', () => {
+    const all = [
+      ...CONTENT.items.all(),
+      ...CONTENT.actions.all(),
+      ...CONTENT.skills.all(),
+      ...CONTENT.classes.all(),
+      ...CONTENT.buildings.all(),
+    ];
+    for (const c of all) expect(hasTranslation(c.id), c.id).toBe(true);
+    for (const c of CONTENT.classes.all()) {
+      expect(hasTranslation(`${c.id}.desc`)).toBe(true);
+      for (const w of c.weapons) expect(hasTranslation(w), w).toBe(true);
+    }
   });
 });

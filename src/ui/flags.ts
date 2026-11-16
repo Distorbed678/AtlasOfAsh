@@ -20,7 +20,7 @@ function loadOverrides(): FlagOverrides {
   } catch {
     // ignore corrupt storage
   }
-  // `?flags=devTools,-demoActions` overrides and is remembered.
+  // `?flags=devTools,-showUpcoming` overrides and is remembered.
   const fromUrl = new URLSearchParams(window.location.search).get('flags');
   if (fromUrl) Object.assign(out, parseFlagList(fromUrl));
   return out;

@@ -1,11 +1,10 @@
 /**
  * Feature flags: unfinished systems can be merged to main but stay hidden on the
- * public Pages build. Override with `?flags=devTools,-demoActions` (persisted to
+ * public Pages build. Override with `?flags=devTools,-showUpcoming` (persisted to
  * localStorage) or by toggling in Settings.
  */
 export const FLAG_DEFS = {
   devTools: { description: 'Show the dev tools panel', dev: true, prod: false },
-  demoActions: { description: 'Phase 0 demo actions on the Hearth', dev: true, prod: true },
   showUpcoming: { description: 'List upcoming systems in the sidebar', dev: true, prod: true },
 } as const satisfies Record<string, { description: string; dev: boolean; prod: boolean }>;
 
