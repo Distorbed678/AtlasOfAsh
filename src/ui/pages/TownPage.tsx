@@ -4,6 +4,7 @@ import { buildingTier } from '../../engine/economy/town';
 import { nameOf, t, tDynamic } from '../../i18n';
 import { formatNumber, formatPercent } from '../../shared/format';
 import { command, useGameState } from '../bridge';
+import { Icon } from '../components/Icon';
 
 function effectText(effect: BuildingEffect, value: number): string {
   const v =
@@ -41,7 +42,9 @@ function BuildingCard({ def }: { def: BuildingDef }) {
   return (
     <div className="card">
       <div className="card-head">
-        <div className="card-title">{nameOf(def.id)}</div>
+        <div className="card-title">
+          <Icon name={def.id} size={22} className="inline-icon" /> {nameOf(def.id)}
+        </div>
         <span className="tag">
           {tier === 0 ? t('town.unbuilt') : t('town.tier', { tier, max })}
         </span>

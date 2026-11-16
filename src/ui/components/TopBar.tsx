@@ -1,6 +1,7 @@
 import { CONTENT } from '../../engine/content';
 import { nameOf, t } from '../../i18n';
 import { useGameState } from '../bridge';
+import { Icon } from './Icon';
 import { Num } from './Num';
 
 export function TopBar({ onMenu }: { onMenu: () => void }) {
@@ -26,9 +27,7 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
         )}
       </div>
       <div className="topbar-gold" title={t('topbar.gold')}>
-        <span className="gold-icon" aria-hidden="true">
-          ◉
-        </span>
+        <Icon name="ui.gold" size={18} />
         <Num value={gold} />
       </div>
     </header>

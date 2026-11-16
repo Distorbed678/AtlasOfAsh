@@ -5,6 +5,7 @@ import type { GameState } from '../../engine/state';
 import { nameOf, t } from '../../i18n';
 import { formatNumber } from '../../shared/format';
 import { useGame } from '../bridge';
+import { Icon } from '../components/Icon';
 import { ProgressBar } from '../components/ProgressBar';
 import { SKILL_ICONS } from '../icons';
 import { href } from '../router';
@@ -50,7 +51,7 @@ export function OverviewPage({ onWhatsNew }: { onWhatsNew: () => void }) {
           {SKILL_IDS.map((id) => (
             <a key={id} className="card card-link" href={href({ page: 'skill', skillId: id })}>
               <div className="card-title">
-                <span aria-hidden="true">{SKILL_ICONS[id]}</span> {nameOf(id)}
+                <Icon name={SKILL_ICONS[id]} size={18} className="inline-icon" /> {nameOf(id)}
               </div>
               <div className="big-num">{skillLevel(state, id)}</div>
             </a>
