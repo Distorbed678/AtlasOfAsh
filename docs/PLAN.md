@@ -112,6 +112,8 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Worker efficiency | Applied as **slower actions** (30% efficiency → 3.3× action time), normal results per action |
 | Worker wages | Paid as gold per hour (charged per action cycle). Wage ≈ **120% of the vendor value of the worker's output**, so workers never become a gold machine; Workshop tiers bring it toward break-even |
 | Town (Phase 1) | Guild Hall (worker slots), Workshop (efficiency + wage), Training Yard (worker XP share), Vault (bank slots). Costs are **gold + gathered materials** |
+| Page reload | Always returns to the **character select** screen (no auto-continue) |
+| Tier-1 wages | Whole-gold rounding makes tier-1 workers break even (not 120%); accepted, since workers still never profit |
 
 ---
 
