@@ -20,5 +20,10 @@ export function describeOutputs(def: ActionDef): string {
     }
     case 'thieve':
       return t('action.gold', { min: def.gold[0], max: def.gold[1] });
+    case 'craft': {
+      const o = def.output;
+      if (o.kind === 'item') return o.qty > 1 ? `${nameOf(o.itemId)} ×${o.qty}` : nameOf(o.itemId);
+      return nameOf(o.kind === 'gear' ? o.baseId : o.uniqueId);
+    }
   }
 }

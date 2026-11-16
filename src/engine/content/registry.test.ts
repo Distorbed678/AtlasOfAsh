@@ -28,8 +28,8 @@ describe('shipped content', () => {
     }
   });
 
-  it('each skill has 10 tiers with increasing level and duration', () => {
-    for (const skillId of SKILL_IDS) {
+  it('each gathering skill has 10 tiers with increasing level and duration', () => {
+    for (const skillId of SKILL_IDS.filter((id) => CONTENT.skills.get(id).kind !== 'artisan')) {
       const actions = actionsForSkill(skillId);
       expect(actions).toHaveLength(10);
       for (let i = 1; i < actions.length; i++) {

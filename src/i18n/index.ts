@@ -1,11 +1,12 @@
 import { contentEn } from './content.en';
 import { en, type TKey } from './en';
 import { flavourEn } from './flavour.en';
+import { itemsEn } from './items.en';
 
 export type { TKey } from './en';
 export type Params = Record<string, string | number>;
 
-const english: Record<string, string> = { ...contentEn, ...flavourEn, ...en };
+const english: Record<string, string> = { ...contentEn, ...itemsEn, ...flavourEn, ...en };
 const dictionaries: Record<string, Record<string, string>> = { en: english };
 let current: Record<string, string> = english;
 

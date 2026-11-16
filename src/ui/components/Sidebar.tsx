@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { SKILL_IDS } from '../../engine/content';
+import { CONTENT, SKILL_IDS } from '../../engine/content';
 import { bankCapacity, bankSlotsUsed } from '../../engine/economy/bank';
 import { levelProgress } from '../../engine/skills/xp';
 import { nameOf, t, type TKey } from '../../i18n';
@@ -11,7 +11,6 @@ import { Icon } from './Icon';
 
 /** Systems on the roadmap, shown greyed out with the phase that delivers them. */
 const UPCOMING: { key: TKey; phase: number }[] = [
-  { key: 'nav.upcoming.crafting', phase: 3 },
   { key: 'nav.upcoming.combat', phase: 4 },
   { key: 'nav.upcoming.passives', phase: 6 },
   { key: 'nav.upcoming.atlas', phase: 9 },
@@ -57,28 +56,36 @@ export function Sidebar({ route, open, onNavigate }: Props) {
           'nav.bank',
           <span className="nav-badge nav-badge-plain">{`${bankUsed}/${bankCap}`}</span>,
         )}
+        {link({ page: 'stash' }, t('nav.stash'), 'nav.stash')}
+        {link({ page: 'equipment' }, t('nav.equipment'), 'nav.equipment')}
         {link({ page: 'town' }, t('nav.town'), 'nav.town')}
         {link({ page: 'workers' }, t('nav.workers'), 'nav.workers')}
         {link({ page: 'codex' }, t('nav.codex'), 'nav.codex')}
       </div>
-      <div className="nav-group">
-        <div className="nav-group-title">{t('nav.group.skills')}</div>
-        {SKILL_IDS.map((id) => {
-          const p = levelProgress(skills[id].xp);
-          return link(
-            { page: 'skill', skillId: id },
-            nameOf(id),
-            SKILL_ICONS[id],
-            <>
-              <span className="nav-badge nav-badge-plain">{p.level}</span>
-              <span className="nav-xp" aria-hidden="true">
-                <span style={{ width: `${p.fraction * 100}%` }} />
-              </span>
-            </>,
-            !!levelFlash[id],
-          );
-        })}
-      </div>
+      {(['gathering', 'artisan'] as const).map((kind) => (
+        <div key={kind} className="nav-group">
+          <div className="nav-group-title">{t(`nav.group.${kind}`)}</div>
+          {SKILL_IDS.filter((id) =>
+            kind === 'artisan'
+              ? CONTENT.skills.get(id).kind === 'artisan'
+              : CONTENT.skills.get(id).kind !== 'artisan',
+          ).map((id) => {
+            const p = levelProgress(skills[id].xp);
+            return link(
+              { page: 'skill', skillId: id },
+              nameOf(id),
+              SKILL_ICONS[id],
+              <>
+                <span className="nav-badge nav-badge-plain">{p.level}</span>
+                <span className="nav-xp" aria-hidden="true">
+                  <span style={{ width: `${p.fraction * 100}%` }} />
+                </span>
+              </>,
+              !!levelFlash[id],
+            );
+          })}
+        </div>
+      ))}
 
       {showUpcoming && (
         <div className="nav-group">

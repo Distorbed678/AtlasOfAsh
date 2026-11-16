@@ -2,6 +2,24 @@
 
 All notable changes to Atlas of Ash. Shown in-game under "What's new".
 
+## [0.3.0] - 2026-11-16
+
+### Added
+
+- Five artisan skills: Smithing (bars, weapons, shields, heavy armour), Woodworking (planks, bows, crossbows, staves, wands, quivers), Tailoring (leather, cloth, light armour, robes, belts, foci), Jewelcrafting (cut gems, rings, amulets) and Enchanting.
+- About 490 equipment bases: 12 weapon types and armour in armour, evasion, energy shield and hybrid variants, each in 10 material tiers.
+- 41 affixes with 10 tiers each, gated by item level. Crafted gear is usually normal, with a small chance to come out magic or rare.
+- Stash with tabs you can buy with gold; equip gear in ten slots (two-handed weapons, dual wielding, bows with quivers, attribute requirements).
+- Enchanting: disenchant gear into Arcane Dust, brew reagents, then make magic, add affixes, upgrade to rare, reroll, reroll values, remove affixes, lock prefixes or suffixes, infuse a guaranteed affix, or gamble with the Ashen Brand.
+- Six craftable uniques.
+- Item cards show base stats, requirements, implicits and affixes with their tiers.
+- The Codex now includes your gear and shows the DPS of a Basic Attack with your equipped weapon.
+- Herbalism also gathers fibre, and pickpocketing turns up rough pelts.
+
+### Changed
+
+- Every character now starts with 10 Strength, 10 Dexterity and 10 Intelligence.
+
 ## [0.2.0] - 2026-11-16
 
 ### Added

@@ -1565,3 +1565,263 @@ code {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* =================== Phase 3: items =================== */
+
+.rarity-text-normal,
+.rarity-normal .tt-name,
+.rarity-normal .gear-tile-name {
+  color: var(--rarity-normal);
+}
+.rarity-text-magic,
+.rarity-magic .tt-name,
+.rarity-magic .gear-tile-name {
+  color: var(--rarity-magic);
+}
+.rarity-text-rare,
+.rarity-rare .tt-name,
+.rarity-rare .gear-tile-name {
+  color: var(--rarity-rare);
+}
+.rarity-text-unique,
+.rarity-unique .tt-name,
+.rarity-unique .gear-tile-name {
+  color: var(--rarity-unique);
+}
+.rarity-icon-normal {
+  color: var(--rarity-normal);
+}
+.rarity-icon-magic {
+  color: var(--rarity-magic);
+}
+.rarity-icon-rare {
+  color: var(--rarity-rare);
+}
+.rarity-icon-unique {
+  color: var(--rarity-unique);
+}
+
+.tooltip {
+  background: #0f0d0c;
+  border: 1px solid var(--border-strong);
+  border-top: 3px solid var(--rarity-normal);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+
+.tooltip.rarity-magic {
+  border-top-color: var(--rarity-magic);
+}
+.tooltip.rarity-rare {
+  border-top-color: var(--rarity-rare);
+}
+.tooltip.rarity-unique {
+  border-top-color: var(--rarity-unique);
+}
+
+.tt-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.tt-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.tt-base {
+  color: var(--text-dim);
+}
+
+.tt-meta {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+}
+
+.tt-props {
+  color: var(--text-dim);
+}
+
+.tt-modified {
+  color: var(--rarity-magic);
+}
+
+.tt-req {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+
+.tt-section {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tt-implicit {
+  color: #b9c3d6;
+}
+
+.tt-mod {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #a8b6ff;
+}
+
+.tt-tier {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+  align-self: center;
+}
+
+.tt-flavour {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--rarity-unique);
+  opacity: 0.85;
+}
+
+.tt-ashen-line,
+.tt-ashen-footer {
+  color: #e0584a;
+}
+
+.tt-ashen-footer {
+  font-size: 0.78rem;
+  border-top: 1px solid rgba(224, 88, 74, 0.4);
+  padding-top: 6px;
+}
+
+.tooltip.tt-ashen,
+.gear-tile.tt-ashen {
+  box-shadow: inset 0 0 18px rgba(196, 73, 58, 0.25);
+}
+
+.gear-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+}
+
+.gear-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  font: inherit;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.gear-tile:hover {
+  border-color: var(--border-strong);
+}
+
+.gear-tile.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.gear-tile-name {
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.gear-tile-ilvl {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.slot-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 12px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 64px;
+}
+
+.slot-tile.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.slot-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+.slot-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slot-tile.rarity-magic .slot-item {
+  color: var(--rarity-magic);
+}
+.slot-tile.rarity-rare .slot-item {
+  color: var(--rarity-rare);
+}
+.slot-tile.rarity-unique .slot-item {
+  color: var(--rarity-unique);
+}
+
+.enchant-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  gap: var(--gap);
+  width: 100%;
+  align-items: start;
+}
+
+.enchant-op {
+  align-items: flex-start;
+}
+
+.craft-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+
+@media (max-width: 900px) {
+  .enchant-layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -58,6 +58,9 @@ function normalizeState(raw: RawSave): GameState {
   raw.action ??= null;
   raw.workers ??= [];
   raw.town ??= {};
+  raw.stash ??= fresh.stash;
+  raw.equipment ??= {};
+  raw.nextItemUid ??= 1;
   return raw as GameState;
 }
 

@@ -1,11 +1,29 @@
 import { CONTENT, type Content } from './content';
-import type { SkillId } from './content/types';
+import type { EquipSlot, SkillId } from './content/types';
 import { addGold, addItem, hasItems, isLocked, removeItem } from './economy/bank';
 import { buildingTier } from './economy/town';
 import { refundWorker, syncWorkerSlots, tryStartWorkerCycle } from './economy/workers';
-import { canPerform, startRunner } from './skills/actions';
+import {
+  applyEnchant,
+  DISENCHANT_XP,
+  dustYield,
+  gearSellPrice,
+  opSpec,
+  type EnchantOp,
+} from './items/enchanting';
+import { displacedBy, equipProblem } from './items/equipment';
+import {
+  addToStash,
+  findItem,
+  MAX_STASH_TABS,
+  nextTabCost,
+  stashFree,
+  takeFromStash,
+} from './items/stash';
+import { ARCANE_DUST } from './content/materials';
+import { canPerform, cycleBlocker, skillLevel, startRunner } from './skills/actions';
 import { masteryLevel, poolCostForNextMastery } from './skills/mastery';
-import { rngFor, type GameState } from './state';
+import { rngFor, STASH_TAB_SIZE, type GameState } from './state';
 
 /** Player intents. Applied at the current sim time, between events. */
 export type Command =
@@ -20,7 +38,15 @@ export type Command =
   | { type: 'moveToTab'; itemId: string; tabId: number }
   | { type: 'upgradeBuilding'; buildingId: string }
   | { type: 'assignWorker'; slot: number; actionId: string | null }
-  | { type: 'spendPool'; skillId: SkillId; actionId: string };
+  | { type: 'spendPool'; skillId: SkillId; actionId: string }
+  | { type: 'buyStashTab' }
+  | { type: 'renameStashTab'; tabId: number; name: string }
+  | { type: 'moveGear'; uid: number; tabId: number }
+  | { type: 'equip'; uid: number; slot: EquipSlot }
+  | { type: 'unequip'; slot: EquipSlot }
+  | { type: 'sellGear'; uids: number[] }
+  | { type: 'disenchant'; uids: number[] }
+  | { type: 'enchant'; uid: number; op: EnchantOp; infusionId?: string };
 
 export class CommandError extends Error {}
 
@@ -39,6 +65,9 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
       const def = content.actions.get(cmd.actionId);
       if (!canPerform(state, def)) throw new CommandError('Level too low');
       if (state.action?.actionId === def.id) return;
+      const blocker = cycleBlocker(state, def);
+      if (blocker === 'materials') throw new CommandError('Missing materials');
+      if (blocker === 'stash') throw new CommandError('Your stash is full');
       state.action = startRunner(state, def, { kind: 'player' }, state.time, content);
       return;
     }
@@ -150,6 +179,106 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
       skill.mastery[def.id] = (skill.mastery[def.id] ?? 0) + cost;
       if (masteryLevel(state, def) !== before + 1)
         throw new Error('Pool spend did not level mastery');
+      return;
+    }
+
+    case 'buyStashTab': {
+      if (state.stash.tabs.length >= MAX_STASH_TABS)
+        throw new CommandError('No more tabs available');
+      const cost = nextTabCost(state)!;
+      if (state.gold < cost) throw new CommandError('Not enough gold');
+      state.gold -= cost;
+      const id = state.stash.nextTabId++;
+      state.stash.tabs.push({ id, name: `Stash ${id + 1}`, items: [] });
+      return;
+    }
+    case 'renameStashTab': {
+      const tab = state.stash.tabs.find((t) => t.id === cmd.tabId);
+      if (!tab) throw new CommandError('No such tab');
+      tab.name = cleanName(cmd.name);
+      return;
+    }
+    case 'moveGear': {
+      const tab = state.stash.tabs.find((t) => t.id === cmd.tabId);
+      if (!tab) throw new CommandError('No such tab');
+      if (tab.items.length >= STASH_TAB_SIZE) throw new CommandError('That tab is full');
+      const item = takeFromStash(state, cmd.uid);
+      if (!item) throw new CommandError('Item not found in stash');
+      tab.items.push(item);
+      return;
+    }
+    case 'equip': {
+      const loc = findItem(state, cmd.uid);
+      if (!loc || loc.where !== 'stash') throw new CommandError('Item not found in stash');
+      const problem = equipProblem(state, loc.item, cmd.slot, content);
+      if (problem) throw new CommandError(problem);
+      const displaced = displacedBy(state, loc.item, cmd.slot, content);
+      // Everything displaced goes back to the stash; the equipped item frees one stash slot.
+      if (stashFree(state) + 1 < displaced.length) throw new CommandError('Your stash is full');
+      const item = takeFromStash(state, cmd.uid)!;
+      for (const slot of displaced) {
+        addToStash(state, state.equipment[slot]!, loc.tab.id);
+        delete state.equipment[slot];
+      }
+      state.equipment[cmd.slot] = item;
+      return;
+    }
+    case 'unequip': {
+      const item = state.equipment[cmd.slot];
+      if (!item) return;
+      if (!addToStash(state, item)) throw new CommandError('Your stash is full');
+      delete state.equipment[cmd.slot];
+      return;
+    }
+    case 'sellGear': {
+      for (const uid of cmd.uids) {
+        const item = takeFromStash(state, uid);
+        if (item) addGold(state, gearSellPrice(item, content));
+      }
+      return;
+    }
+    case 'disenchant': {
+      let dust = 0;
+      let xp = 0;
+      for (const uid of cmd.uids) {
+        const item = takeFromStash(state, uid);
+        if (!item) continue;
+        dust += dustYield(item);
+        xp += DISENCHANT_XP[item.rarity];
+      }
+      if (dust > 0) addItem(state, ARCANE_DUST, dust, content);
+      state.skills['skill.enchanting'].xp += xp;
+      return;
+    }
+    case 'enchant': {
+      const loc = findItem(state, cmd.uid);
+      if (!loc) throw new CommandError('Item not found');
+      let spec;
+      try {
+        spec = opSpec(cmd.op, cmd.infusionId);
+      } catch (e) {
+        throw new CommandError((e as Error).message);
+      }
+      if (skillLevel(state, 'skill.enchanting') < spec.level)
+        throw new CommandError(`Requires Enchanting level ${spec.level}`);
+      if (!hasItems(state, spec.reagents)) throw new CommandError('Missing reagents');
+      // Work on a copy so a failed operation never leaves a half-changed item.
+      const copy = structuredClone(loc.item);
+      let outcome: string | null;
+      try {
+        outcome = applyEnchant(rngFor(state, 'enchant'), copy, cmd.op, cmd.infusionId, content);
+      } catch (e) {
+        throw new CommandError((e as Error).message);
+      }
+      for (const [id, qty] of Object.entries(spec.reagents)) removeItem(state, id, qty);
+      Object.assign(loc.item, copy);
+      if (!copy.name) delete loc.item.name;
+      if (!copy.uniqueId) {
+        delete loc.item.uniqueId;
+        delete loc.item.uniqueValues;
+      }
+      state.skills['skill.enchanting'].xp += spec.xp;
+      state.lastEnchant = { uid: cmd.uid, op: cmd.op, outcome };
       return;
     }
   }

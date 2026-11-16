@@ -1,6 +1,12 @@
 import { actionsForSkill, CONTENT } from '../../engine/content';
 import type { ActionDef, SkillId } from '../../engine/content/types';
-import { canPerform, cycleDuration, maxRockHp, skillLevel } from '../../engine/skills/actions';
+import {
+  canPerform,
+  craftRarityChances,
+  cycleDuration,
+  maxRockHp,
+  skillLevel,
+} from '../../engine/skills/actions';
 import {
   masteryLevel,
   playerModifiers,
@@ -19,7 +25,9 @@ import {
 import type { GameState } from '../../engine/state';
 import { nameOf, t, tDynamic, type TKey } from '../../i18n';
 import { formatDuration, formatNumber, formatPercent } from '../../shared/format';
+import { useState } from 'react';
 import { command, useGame, useGameState } from '../bridge';
+import { EnchantPanel } from '../components/EnchantPanel';
 import { Icon } from '../components/Icon';
 import { ProgressBar } from '../components/ProgressBar';
 import { SkillXpBar } from '../components/SkillHeader';
@@ -52,11 +60,16 @@ export function SkillPage({ skillId }: { skillId: SkillId }) {
         ))}
       </div>
       <PoolPanel skillId={skillId} />
-      <div className="card-grid card-grid-wide">
-        {actionsForSkill(skillId).map((def) => (
-          <ActionCard key={def.id} def={def} />
-        ))}
-      </div>
+      {skillId === 'skill.enchanting' && <EnchantPanel />}
+      {skill.kind === 'artisan' ? (
+        <ArtisanBrowser skillId={skillId} />
+      ) : (
+        <div className="card-grid card-grid-wide">
+          {actionsForSkill(skillId).map((def) => (
+            <ActionCard key={def.id} def={def} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -152,6 +165,12 @@ function MasteryBonuses({ state, def }: { state: GameState; def: ActionDef }) {
     lines.push(t('action.bonus.double', { pct: formatPercent(mods.doubleChance, 0) }));
   if (def.type === 'rock' && mods.rockHpBonus > 0)
     lines.push(t('action.bonus.rock', { n: mods.rockHpBonus }));
+  if (def.type === 'craft' && def.output.kind === 'gear') {
+    const c = craftRarityChances(masteryLevel(state, def));
+    lines.push(
+      t('craft.rarity', { magic: formatPercent(c.magic, 1), rare: formatPercent(c.rare, 1) }),
+    );
+  }
   if (def.type === 'thieve')
     lines.push(t('action.bonus.stealth', { n: mods.stealth, perception: def.perception }));
   return (
@@ -210,6 +229,19 @@ function ActionCard({ def }: { def: ActionDef }) {
         <span className="tag">T{def.tier}</span>
       </div>
       <div className="dim small">{describeOutputs(def)}</div>
+      {def.type === 'craft' && (
+        <div className="craft-inputs small">
+          <span className="faint">{t('craft.needs')}</span>
+          {Object.entries(def.inputs).map(([id, q]) => {
+            const have = state.bank.items[id] ?? 0;
+            return (
+              <span key={id} className={have >= q ? '' : 'bad'}>
+                {q}× {nameOf(id)} <span className="faint">({formatNumber(have)})</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
       <div className="stat-row small">
         <span>{formatDuration(duration)}</span>
         <span>{t('action.xp', { xp: def.xp })}</span>
@@ -285,5 +317,64 @@ function ActionCard({ def }: { def: ActionDef }) {
         )}
       </div>
     </div>
+  );
+}
+
+/** Grouped recipe browser for artisan skills: group tabs, then a type filter, then the 10 tiers. */
+function ArtisanBrowser({ skillId }: { skillId: SkillId }) {
+  const actions = actionsForSkill(skillId);
+  const groups = [...new Set(actions.map((a) => (a.type === 'craft' ? a.group : 'other')))];
+  const [group, setGroup] = useState(groups[0]!);
+  const inGroup = actions.filter((a) => a.type === 'craft' && a.group === group);
+  const kindOf = (a: ActionDef) => {
+    if (a.type !== 'craft' || a.output.kind !== 'gear') return 'all';
+    const base = CONTENT.bases.get(a.output.baseId);
+    return base.defenceType ? `${base.class}:${base.defenceType}` : base.class;
+  };
+  const kinds = [...new Set(inGroup.map(kindOf))];
+  const [kindState, setKind] = useState('');
+  const kind = kinds.includes(kindState) ? kindState : kinds[0]!;
+  const kindLabel = (k: string) => {
+    if (k === 'all') return '';
+    const [cls, def] = k.split(':');
+    return def
+      ? `${tDynamic(`baseclass.${cls}`)} — ${tDynamic(`defence.${def}`)}`
+      : tDynamic(`baseclass.${cls}`);
+  };
+  const shown = inGroup.filter((a) => kindOf(a) === kind);
+
+  return (
+    <>
+      <div className="tabs" role="tablist">
+        {groups.map((g) => (
+          <button
+            key={g}
+            role="tab"
+            aria-selected={g === group}
+            className={`tab${g === group ? ' active' : ''}`}
+            onClick={() => setGroup(g)}
+          >
+            {tDynamic(`group.${g}`)}
+          </button>
+        ))}
+      </div>
+      {kinds.length > 1 && (
+        <label className="row small">
+          {t('craft.kind')}
+          <select className="input" value={kind} onChange={(e) => setKind(e.target.value)}>
+            {kinds.map((k) => (
+              <option key={k} value={k}>
+                {kindLabel(k)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      <div className="card-grid card-grid-wide">
+        {shown.map((def) => (
+          <ActionCard key={def.id} def={def} />
+        ))}
+      </div>
+    </>
   );
 }
