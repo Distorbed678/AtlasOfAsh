@@ -1,6 +1,5 @@
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
-import { deriveSeed, seedRng } from '../core/rng';
-import { RNG_STREAMS, type GameState } from '../state';
+import { createInitialState, emptySkill, type GameState } from '../state';
 import { migrate, type RawSave } from './migrations';
 
 /** Export strings look like `AOA1.<base64 deflated JSON>`. */
@@ -39,20 +38,26 @@ export function deserializeState(json: string): GameState {
   return normalizeState(migrated);
 }
 
-/** Fill in anything a valid-but-older save may lack (e.g. a newly added RNG stream). */
+/**
+ * Fill in anything a valid-but-older save may lack (new skills, new stats,
+ * new bank fields) using the defaults of a fresh character.
+ */
 function normalizeState(raw: RawSave): GameState {
   for (const key of ['seed', 'createdAt', 'lastRealTime', 'time', 'gold'] as const) {
     if (typeof raw[key] !== 'number' || !Number.isFinite(raw[key]))
       throw new Error(`Save field "${key}" is missing or invalid`);
   }
+  if (typeof raw.character?.id !== 'string') throw new Error('Save has no character');
+  const fresh = createInitialState(raw.seed, raw.createdAt, raw.character);
   raw.rng ??= {};
-  for (const stream of RNG_STREAMS) {
-    raw.rng[stream] ??= seedRng(deriveSeed(raw.seed, stream));
-  }
-  raw.bank ??= {};
+  raw.bank = { ...fresh.bank, ...raw.bank };
+  raw.skills = { ...fresh.skills, ...raw.skills };
+  for (const id of Object.keys(fresh.skills))
+    raw.skills[id] = { ...emptySkill(), ...raw.skills[id] };
+  raw.stats = { ...fresh.stats, ...raw.stats };
   raw.action ??= null;
-  raw.stats ??= {};
-  raw.stats.actionsCompleted ??= 0;
+  raw.workers ??= [];
+  raw.town ??= {};
   return raw as GameState;
 }
 

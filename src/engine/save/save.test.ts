@@ -9,7 +9,10 @@ import { MemoryStore } from './store';
 
 function playedState() {
   const s = createInitialState(42, 1_000);
-  applyCommand(s, { type: 'startAction', actionId: 'action.demo_kindle' });
+  s.town['building.guild_hall'] = 1;
+  s.gold = 1000;
+  applyCommand(s, { type: 'startAction', actionId: 'action.pickpocket_farmhand' });
+  applyCommand(s, { type: 'assignWorker', slot: 0, actionId: 'action.chop_pine' });
   advance(s, 600_000);
   return s;
 }
@@ -47,13 +50,39 @@ describe('codec', () => {
     expect(() => deserializeState(JSON.stringify(s))).toThrow(/newer game version/);
   });
 
-  it('fills in a missing RNG stream deterministically', () => {
+  it('fills in fields missing from an older-but-valid save', () => {
     const s = playedState();
     const raw = JSON.parse(serializeState(s));
-    delete raw.rng.action;
-    const a = deserializeState(JSON.stringify(raw));
-    const b = deserializeState(JSON.stringify(raw));
-    expect(a.rng.action).toEqual(b.rng.action);
+    delete raw.skills['skill.fishing'];
+    delete raw.stats.wagesPaid;
+    delete raw.bank.tabs;
+    const loaded = deserializeState(JSON.stringify(raw));
+    expect(loaded.skills['skill.fishing']).toEqual({ xp: 0, pool: 0, mastery: {} });
+    expect(loaded.stats.wagesPaid).toBe(0);
+    expect(loaded.bank.tabs).toEqual([{ id: 0, name: 'Main' }]);
+  });
+
+  it('migrates a Phase 0 (v1) demo save', () => {
+    const v1 = {
+      version: 1,
+      seed: 9,
+      createdAt: 5,
+      lastRealTime: 10,
+      time: 1000,
+      rng: { action: [1, 2, 3, 4] },
+      bank: { 'item.demo_ember': 50 },
+      gold: 77,
+      action: { actionId: 'action.demo_kindle', startedAt: 0, nextAt: 3000 },
+      stats: { actionsCompleted: 12 },
+    };
+    const s = deserializeState(JSON.stringify(v1));
+    expect(s.version).toBe(2);
+    expect(s.character.id).toBe('default');
+    expect(s.gold).toBe(77);
+    expect(s.bank.items).toEqual({});
+    expect(s.action).toBeNull();
+    expect(s.stats.actionsCompleted).toBe(12);
+    advance(s, 2000); // loads into a working state
   });
 });
 

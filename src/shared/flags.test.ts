@@ -8,9 +8,9 @@ describe('flags', () => {
   });
 
   it('parses override lists and ignores unknown names', () => {
-    expect(parseFlagList('devTools, -demoActions, bogus')).toEqual({
+    expect(parseFlagList('devTools, -showUpcoming, bogus')).toEqual({
       devTools: true,
-      demoActions: false,
+      showUpcoming: false,
     });
   });
 

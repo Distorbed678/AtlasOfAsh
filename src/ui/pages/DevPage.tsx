@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CONTENT } from '../../engine/content';
-import { t, tDynamic } from '../../i18n';
+import { nameOf, t } from '../../i18n';
 import { send, useGame } from '../bridge';
 
 const MIN = 60_000;
@@ -19,7 +19,7 @@ export function DevPage() {
   const state = useGame((s) => s.state);
   const items = CONTENT.items.all();
   const [itemId, setItemId] = useState(items[0]?.id ?? '');
-  const [qty, setQty] = useState(10);
+  const [qty, setQty] = useState(100);
   const [speed, setSpeed] = useState(1);
 
   return (
@@ -61,7 +61,7 @@ export function DevPage() {
           <select className="input" value={itemId} onChange={(e) => setItemId(e.target.value)}>
             {items.map((i) => (
               <option key={i.id} value={i.id}>
-                {tDynamic(i.nameKey)}
+                {nameOf(i.id)}
               </option>
             ))}
           </select>
@@ -75,8 +75,13 @@ export function DevPage() {
           <button className="btn" onClick={() => send({ type: 'devGive', itemId, qty })}>
             {t('dev.giveButton')}
           </button>
-          <button className="btn" onClick={() => send({ type: 'devGive', gold: 1000 })}>
+        </div>
+        <div className="row">
+          <button className="btn" onClick={() => send({ type: 'devGive', gold: 10_000 })}>
             {t('dev.gold')}
+          </button>
+          <button className="btn" onClick={() => send({ type: 'devGive', levels: 10 })}>
+            {t('dev.levels')}
           </button>
         </div>
       </section>

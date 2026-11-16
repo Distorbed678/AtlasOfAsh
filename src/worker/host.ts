@@ -1,11 +1,15 @@
 import { applyCommand } from '../engine/commands';
-import { CONTENT } from '../engine/content';
+import { CONTENT, SKILL_IDS } from '../engine/content';
+import { addGold, addItem } from '../engine/economy/bank';
+import { CharacterIndex, summarizeCharacter } from '../engine/save/characters';
 import { decodeSave, encodeSave } from '../engine/save/codec';
-import type { SaveManager } from '../engine/save/saveManager';
+import { SaveManager } from '../engine/save/saveManager';
+import type { SaveStore } from '../engine/save/store';
 import { advance } from '../engine/sim';
-import { addItem, createInitialState, SAVE_VERSION, type GameState } from '../engine/state';
+import { levelForXp, xpForLevel } from '../engine/skills/xp';
+import { CHARACTER_MODES, createInitialState, SAVE_VERSION, type GameState } from '../engine/state';
 import { summarize, takeSnapshot } from '../engine/summary';
-import type { DebugBundle, FromWorker, ToWorker, WorkerRequest } from './protocol';
+import type { DebugBundle, FromWorker, NewCharacter, ToWorker, WorkerRequest } from './protocol';
 
 export const TICK_MS = 100;
 /** A real-time gap larger than this is treated as offline time and caught up in chunks. */
@@ -18,9 +22,10 @@ export const BACKUP_MS = 10 * 60_000;
 const CATCHUP_CHUNK_MS = 60_000;
 /** Yield to the event loop (to post progress and receive messages) this often. */
 const CATCHUP_YIELD_MS = 30;
+const LEGACY_SLOT = 'default';
 
 export interface HostDeps {
-  saves: SaveManager;
+  store: SaveStore;
   now: () => number;
   post: (msg: FromWorker) => void;
   yieldToEventLoop: () => Promise<void>;
@@ -29,11 +34,14 @@ export interface HostDeps {
 }
 
 /**
- * Owns the authoritative GameState inside the Web Worker. Pure logic with all
- * I/O injected, so it is fully testable in Node.
+ * Owns the active character's GameState inside the Web Worker. Pure logic with
+ * all I/O injected, so it is fully testable in Node. Each character is its own
+ * save slot and catches up its own offline time when selected.
  */
 export class GameHost {
-  state!: GameState;
+  state: GameState | null = null;
+  private saves: SaveManager | null = null;
+  private readonly index: CharacterIndex;
   private ready = false;
   private busy = false;
   private queue: ToWorker[] = [];
@@ -41,28 +49,31 @@ export class GameHost {
   private lastAutosave = 0;
   private lastBackup = 0;
 
-  constructor(private readonly deps: HostDeps) {}
+  constructor(private readonly deps: HostDeps) {
+    this.index = new CharacterIndex(deps.store);
+  }
 
   async init(): Promise<void> {
-    const { saves, now } = this.deps;
-    const loaded = await saves.load();
-    this.state = loaded ?? createInitialState(this.deps.newSeed(), now());
-    const backups = await saves.listBackups();
-    this.lastBackup = backups[0]?.savedAt ?? 0;
-    this.lastAutosave = now();
-    if (loaded) await this.maybeBackup(now());
-    else await saves.save(this.state);
-
+    await this.adoptLegacySave();
     this.ready = true;
-    this.deps.post({ type: 'ready' });
-    await this.catchUpOffline();
-    this.postSnapshot();
+    this.deps.post({ type: 'ready', characters: await this.index.list() });
     await this.drainQueue();
+  }
+
+  /** Phase 0 kept a single save in slot "default"; list it as a character. */
+  private async adoptLegacySave(): Promise<void> {
+    if ((await this.index.list()).length > 0) return;
+    try {
+      const legacy = await new SaveManager(this.deps.store, LEGACY_SLOT).load();
+      if (legacy) await this.index.upsert(summarizeCharacter(legacy, legacy.lastRealTime));
+    } catch {
+      // unreadable legacy save: ignore
+    }
   }
 
   /** Called every TICK_MS by the worker's timer. */
   async tick(): Promise<void> {
-    if (!this.ready || this.busy) return;
+    if (!this.ready || this.busy || !this.state) return;
     const now = this.deps.now();
     const elapsed = Math.max(0, now - this.state.lastRealTime);
     if (elapsed > OFFLINE_THRESHOLD_MS && this.speed === 1) {
@@ -89,68 +100,93 @@ export class GameHost {
   }
 
   private async dispatch(msg: ToWorker): Promise<void> {
+    if (msg.type === 'request') {
+      await this.handleRequest(msg.reqId, msg.req);
+      return;
+    }
+    const state = this.state;
+    if (!state) return;
     switch (msg.type) {
-      case 'command':
-        applyCommand(this.state, msg.cmd);
-        this.postSnapshot();
-        // Player decisions are saved immediately so a reload never forgets them.
-        await this.persist(this.deps.now());
-        return;
-      case 'request':
-        await this.handleRequest(msg.reqId, msg.req);
-        return;
       case 'devSkip':
         await this.catchUp(Math.max(0, msg.ms), 'devSkip');
-        this.postSnapshot();
-        await this.persist(this.deps.now());
-        return;
+        break;
       case 'devSpeed':
         this.speed = Math.min(1000, Math.max(1, msg.speed));
         return;
       case 'devGive':
-        if (msg.itemId) addItem(this.state, CONTENT.items.get(msg.itemId).id, msg.qty ?? 1);
-        if (msg.gold) this.state.gold += msg.gold;
-        this.postSnapshot();
-        await this.persist(this.deps.now());
-        return;
+        if (msg.itemId) addItem(state, CONTENT.items.get(msg.itemId).id, msg.qty ?? 1);
+        if (msg.gold) addGold(state, msg.gold);
+        if (msg.levels) {
+          for (const id of SKILL_IDS) {
+            const skill = state.skills[id];
+            const target = Math.min(99, levelForXp(skill.xp) + msg.levels);
+            skill.xp = Math.max(skill.xp, xpForLevel(target));
+          }
+        }
+        break;
     }
+    this.postSnapshot();
+    await this.persist(this.deps.now());
+  }
+
+  private requireState(): GameState {
+    if (!this.state) throw new Error('No character selected');
+    return this.state;
   }
 
   private async handleRequest(reqId: number, req: WorkerRequest): Promise<void> {
-    const { saves, post, now } = this.deps;
+    const { post, now } = this.deps;
     try {
       let data: unknown = null;
       switch (req.type) {
-        case 'saveNow':
+        case 'listCharacters':
+          data = await this.index.list();
+          break;
+        case 'createCharacter':
+          data = await this.createCharacter(req.character);
+          break;
+        case 'selectCharacter':
+          await this.selectCharacter(req.id);
+          break;
+        case 'closeCharacter':
+          await this.closeCharacter();
+          break;
+        case 'deleteCharacter':
+          if (this.state?.character.id === req.id) await this.closeCharacter();
+          await new SaveManager(this.deps.store, req.id).deleteAll();
+          await this.index.remove(req.id);
+          await this.postCharacters();
+          break;
+        case 'command':
+          // Player decisions are saved immediately so a reload never forgets them.
+          applyCommand(this.requireState(), req.cmd);
+          this.postSnapshot();
           await this.persist(now());
+          break;
+        case 'saveNow':
+          if (this.state) await this.persist(now());
           break;
         case 'exportSave':
-          data = encodeSave(this.state);
+          data = encodeSave(this.requireState());
           break;
-        case 'importSave': {
-          const imported = decodeSave(req.data);
-          await saves.backup(this.state, now()); // safety net before replacing
-          this.replaceState(imported);
-          await this.persist(now());
+        case 'importSave':
+          data = await this.importAsNewCharacter(req.data);
           break;
-        }
         case 'listBackups':
-          data = await saves.listBackups();
+          data = this.saves ? await this.saves.listBackups() : [];
           break;
         case 'restoreBackup': {
-          const restored = await saves.loadBackup(req.key);
-          this.replaceState(restored);
+          if (!this.saves || !this.state) throw new Error('No character selected');
+          const restored = await this.saves.loadBackup(req.key);
+          await this.saves.backup(this.state, now()); // safety net before replacing
+          restored.lastRealTime = now();
+          this.state = restored;
           await this.persist(now());
+          this.postSnapshot();
           break;
         }
         case 'debugBundle':
           data = this.debugBundle();
-          break;
-        case 'reset':
-          await saves.deleteAll();
-          this.replaceState(createInitialState(this.deps.newSeed(), now()));
-          this.lastBackup = now(); // don't immediately back up the empty new save
-          await this.persist(now());
           break;
       }
       post({ type: 'response', reqId, ok: true, data });
@@ -159,46 +195,102 @@ export class GameHost {
     }
   }
 
-  /** Swap in a loaded/imported state. Offline time inside it is NOT simulated (fresh start point). */
-  private replaceState(next: GameState): void {
-    next.lastRealTime = this.deps.now();
-    this.state = next;
+  private newCharacterId(): string {
+    return `c${this.deps.newSeed().toString(36)}${this.deps.now().toString(36)}`;
+  }
+
+  private async createCharacter(input: NewCharacter): Promise<string> {
+    const name = input.name.trim().slice(0, 24);
+    if (!name) throw new Error('Please enter a name');
+    if (!CONTENT.classes.has(input.classId)) throw new Error('Unknown class');
+    if (!CHARACTER_MODES.includes(input.mode)) throw new Error('Unknown mode');
+    const seed = this.deps.newSeed();
+    const id = this.newCharacterId();
+    const state = createInitialState(seed, this.deps.now(), {
+      id,
+      name,
+      classId: input.classId,
+      mode: input.mode,
+    });
+    await new SaveManager(this.deps.store, id).save(state);
+    await this.index.upsert(summarizeCharacter(state, this.deps.now()));
+    await this.postCharacters();
+    return id;
+  }
+
+  private async importAsNewCharacter(data: string): Promise<string> {
+    const imported = decodeSave(data);
+    const id = this.newCharacterId();
+    imported.character = { ...imported.character, id, name: imported.character.name.slice(0, 24) };
+    imported.lastRealTime = this.deps.now(); // don't simulate the time the string sat in a clipboard
+    await new SaveManager(this.deps.store, id).save(imported);
+    await this.index.upsert(summarizeCharacter(imported, this.deps.now()));
+    await this.postCharacters();
+    return id;
+  }
+
+  private async selectCharacter(id: string): Promise<void> {
+    if (this.state) await this.closeCharacter();
+    const saves = new SaveManager(this.deps.store, id);
+    const loaded = await saves.load();
+    if (!loaded) throw new Error('Character not found');
+    loaded.character.id = id;
+    this.saves = saves;
+    this.state = loaded;
+    const now = this.deps.now();
+    this.lastBackup = (await saves.listBackups())[0]?.savedAt ?? 0;
+    this.lastAutosave = now;
+    this.speed = 1;
+    await this.maybeBackup(now);
+    this.postSnapshot();
+    await this.catchUpOffline();
+    await this.persist(this.deps.now());
     this.postSnapshot();
   }
 
+  private async closeCharacter(): Promise<void> {
+    if (this.state) await this.persist(this.deps.now());
+    this.state = null;
+    this.saves = null;
+    this.postSnapshot();
+    await this.postCharacters();
+  }
+
+  private async postCharacters(): Promise<void> {
+    this.deps.post({ type: 'characters', characters: await this.index.list() });
+  }
+
   private async catchUpOffline(): Promise<void> {
+    if (!this.state) return;
     const start = this.deps.now();
     const gap = Math.max(0, start - this.state.lastRealTime);
     if (gap > 0) await this.catchUp(gap, 'offline');
-    this.state.lastRealTime = start;
+    if (this.state) this.state.lastRealTime = start;
   }
 
   /** Simulate `durationMs` of game time in chunks, yielding so the UI gets progress. */
   private async catchUp(durationMs: number, reason: 'offline' | 'devSkip'): Promise<void> {
-    if (durationMs <= 0) return;
+    const state = this.state;
+    if (!state || durationMs <= 0) return;
     const { post, now, yieldToEventLoop } = this.deps;
     this.busy = true;
     try {
-      const before = takeSnapshot(this.state);
-      const target = this.state.time + durationMs;
+      const before = takeSnapshot(state);
+      const target = state.time + durationMs;
       const showProgress = durationMs >= AWAY_SUMMARY_MIN_MS;
       let lastYield = now();
-      while (this.state.time < target) {
-        advance(this.state, Math.min(target, this.state.time + CATCHUP_CHUNK_MS));
+      while (state.time < target) {
+        advance(state, Math.min(target, state.time + CATCHUP_CHUNK_MS));
         if (now() - lastYield >= CATCHUP_YIELD_MS) {
           if (showProgress)
-            post({
-              type: 'catchUpProgress',
-              done: this.state.time - before.time,
-              total: durationMs,
-            });
+            post({ type: 'catchUpProgress', done: state.time - before.time, total: durationMs });
           await yieldToEventLoop();
           lastYield = now();
         }
       }
       if (showProgress) post({ type: 'catchUpDone' });
       if (durationMs >= AWAY_SUMMARY_MIN_MS || reason === 'devSkip')
-        post({ type: 'awaySummary', summary: summarize(before, takeSnapshot(this.state)), reason });
+        post({ type: 'awaySummary', summary: summarize(before, takeSnapshot(state)), reason });
     } finally {
       this.busy = false;
     }
@@ -210,19 +302,23 @@ export class GameHost {
   }
 
   private async persist(now: number): Promise<void> {
-    await this.deps.saves.save(this.state);
+    if (!this.state || !this.saves) return;
+    await this.saves.save(this.state);
+    await this.index.upsert(summarizeCharacter(this.state, now));
     this.lastAutosave = now;
     await this.maybeBackup(now);
   }
 
   private async maybeBackup(now: number): Promise<void> {
+    if (!this.state || !this.saves) return;
     if (now - this.lastBackup >= BACKUP_MS) {
-      await this.deps.saves.backup(this.state, now);
+      await this.saves.backup(this.state, now);
       this.lastBackup = now;
     }
   }
 
   private debugBundle(): DebugBundle {
+    const state = this.requireState();
     const { build } = this.deps;
     return {
       game: 'atlas-of-ash',
@@ -231,8 +327,8 @@ export class GameHost {
       buildTime: build.buildTime,
       createdAt: new Date(this.deps.now()).toISOString(),
       saveVersion: SAVE_VERSION,
-      seed: this.state.seed,
-      save: encodeSave(this.state),
+      seed: state.seed,
+      save: encodeSave(state),
     };
   }
 

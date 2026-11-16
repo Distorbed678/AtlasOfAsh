@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
+import { MAX_BACKUPS } from '../../engine/save/saveManager';
 import { t } from '../../i18n';
 import { FLAG_DEFS, type FlagName } from '../../shared/flags';
-import { MAX_BACKUPS } from '../../engine/save/saveManager';
 import type { BackupInfo } from '../../worker/protocol';
-import { request } from '../bridge';
+import { request, useGameState } from '../bridge';
 import { downloadDebugBundle } from '../debugBundle';
 import { useFlags } from '../flags';
+import { toast } from '../toasts';
 
 export function SettingsPage() {
-  const [status, setStatus] = useState<string | null>(null);
+  const character = useGameState((s) => s.character);
   const [exported, setExported] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [importText, setImportText] = useState('');
   const [backups, setBackups] = useState<BackupInfo[]>([]);
 
   const refreshBackups = () =>
@@ -23,20 +23,15 @@ export function SettingsPage() {
   const run = async (fn: () => Promise<unknown>, done?: string) => {
     try {
       await fn();
-      if (done) setStatus(done);
+      if (done) toast(done, 'success');
     } catch (err) {
-      setStatus(t('error.generic', { message: err instanceof Error ? err.message : String(err) }));
+      toast(err instanceof Error ? err.message : String(err), 'error');
     }
   };
 
   return (
     <div className="page">
       <h1 className="page-title">{t('settings.title')}</h1>
-      {status && (
-        <div className="notice" role="status">
-          {status}
-        </div>
-      )}
 
       <section className="panel">
         <h2 className="section-title">{t('settings.save')}</h2>
@@ -82,30 +77,6 @@ export function SettingsPage() {
             </button>
           </div>
         )}
-
-        <h3 className="sub-title">{t('settings.import')}</h3>
-        <p className="dim small">{t('settings.importHelp')}</p>
-        <textarea
-          className="textarea"
-          rows={3}
-          value={importText}
-          onChange={(e) => setImportText(e.target.value)}
-          placeholder="AOA1.…"
-        />
-        <button
-          className="btn"
-          disabled={!importText.trim()}
-          onClick={() => {
-            if (!window.confirm(t('settings.importConfirm'))) return;
-            void run(async () => {
-              await request({ type: 'importSave', data: importText });
-              setImportText('');
-              refreshBackups();
-            }, t('settings.importDone'));
-          }}
-        >
-          {t('settings.importButton')}
-        </button>
       </section>
 
       <section className="panel">
@@ -126,8 +97,8 @@ export function SettingsPage() {
                       if (!window.confirm(t('settings.restoreConfirm', { date }))) return;
                       void run(
                         () => request({ type: 'restoreBackup', key: b.key }),
-                        t('settings.importDone'),
-                      );
+                        t('settings.restored'),
+                      ).then(refreshBackups);
                     }}
                   >
                     {t('settings.restore')}
@@ -154,14 +125,11 @@ export function SettingsPage() {
         <button
           className="btn btn-danger"
           onClick={() => {
-            if (!window.confirm(t('settings.resetConfirm'))) return;
-            void run(async () => {
-              await request({ type: 'reset' });
-              refreshBackups();
-            });
+            if (!window.confirm(t('select.deleteConfirm', { name: character.name }))) return;
+            void run(() => request({ type: 'deleteCharacter', id: character.id }));
           }}
         >
-          {t('settings.reset')}
+          {t('settings.delete')}
         </button>
       </section>
     </div>
