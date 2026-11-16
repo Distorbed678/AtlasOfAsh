@@ -1,0 +1,41 @@
+/* Design tokens — dark ashen palette with an ember accent. */
+:root {
+  color-scheme: dark;
+
+  --bg: #121010;
+  --bg-2: #171413;
+  --panel: #1d1917;
+  --panel-2: #25201d;
+  --panel-hover: #2c2622;
+  --border: #383029;
+  --border-strong: #4a3f36;
+
+  --text: #ddd3c7;
+  --text-dim: #9b8f83;
+  --text-faint: #6d635a;
+
+  --accent: #e08a3c;
+  --accent-strong: #f0a457;
+  --accent-soft: rgba(224, 138, 60, 0.14);
+  --gold: #e6c56b;
+  --good: #8fc27a;
+  --bad: #e06a5a;
+  --danger: #c4493a;
+
+  /* Item rarity colours (used from Phase 3). */
+  --rarity-normal: #cfc8bf;
+  --rarity-magic: #7f9cff;
+  --rarity-rare: #f2d45c;
+  --rarity-unique: #d9783a;
+
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --radius: 8px;
+  --radius-sm: 5px;
+  --gap: 16px;
+  --sidebar-w: 232px;
+  --topbar-h: 52px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
