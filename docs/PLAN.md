@@ -133,6 +133,28 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Ailment numbers | Ignite 20%/s of the fire hit for 4s (strongest only) · Bleed 15%/s of the physical hit for 5s (strongest only) · Poison 20%/s of physical + chaos for 2s (stacks) · Shock: target takes 20% more damage for 4s · Chill: up to 30% slow for 2s · Freeze: cold builds up; at 100% of threshold → frozen 3s. Only ailment/DoT-specific modifiers scale ailments (no double-dipping from "increased fire damage") |
 | Codex (Phase 2) | Character sheet for players + a **dev test bench** (add any mods, test skill, target dummy) showing the full source breakdown |
 
+### 1.10 Phase 3 decisions (items, crafting, Enchanting)
+| Area | Decision |
+|---|---|
+| Gear storage | **Stash tabs bought with gold:** one free 40-item tab; each extra tab costs more gold (rising ladder); tabs can be renamed. Stackable materials stay in the bank |
+| Affix tiers | ~10 tiers per affix, gated by item level (1–100). Crafted item level = material tier × 10, capped by skill level |
+| Base types | One base per material tier (10) for every weapon type and armour piece |
+| Armour bases | Pure (armour / evasion / ES) **plus hybrids** (armour/evasion, armour/ES, evasion/ES) made by the skill of the primary defence, using materials from both skills |
+| Refining | **Bars first:** Smithing smelts ore (+ coal from tier 3) into bars; Woodworking planes logs into planks; Tailoring tans hides and weaves fibre |
+| Tailoring inputs | Leather from monster **hides** (combat, Phase 4; a tier-1 hide comes from Thieving until then). Cloth from **fibre** gathered in Herbalism |
+| Jewelcrafting | Rings and amulets now (bars + cut gems); tree jewels come in Phase 6 |
+| Weapon skills | Smithing: maces, axes, swords, daggers, claws, flails, sceptres, shields, armour pieces. Woodworking: bows, crossbows, staves, quarterstaves, wands, quivers. Tailoring: evasion/ES armour, belts, spell foci. Jewelcrafting: rings, amulets |
+| Crafted rarity | Usually Normal; small chance of Magic (5%) / Rare (1%), rising with mastery |
+| Affix pool | ~40 affixes (≈20 prefixes, ≈20 suffixes), ~10 tiers each, restricted by slot |
+| Crafting speed | Like gathering: refining ~3–6s, gear 8–15s by tier; workers can craft too |
+| Enchanting reagents | **Disenchant + infuse:** disenchanting items yields Arcane Dust; Enchanting crafts reagents from dust + herbs + gem fragments. Runes (Phase 6) and drops (Phase 4) add more later |
+| Enchanting operations | Make magic, add a mod, upgrade magic → rare, reroll all mods, **reroll values, remove a mod, lock prefixes/suffixes, targeted infusions** |
+| Enchanting outcomes | **Always succeeds** (randomness is only in what rolls). Enchanting **level unlocks operations** |
+| Ashen Brand (items) | **Harsh:** 25% nothing · 25% Ashen implicit · 25% reroll into a random rare · 25% brick (heavily damaged). Final state |
+| Uniques | Framework + ~6 craftable uniques from high-level recipes; drop uniques come with monsters |
+| Starting attributes | **All characters start at 10 Str / 10 Dex / 10 Int** |
+| Equipping (pre-combat) | Gear feeds the character sheet; the Codex shows a **Basic Attack** with the equipped weapon. Attribute requirements enforced; level requirements wait for Phase 4 |
+
 ---
 
 ## 2. Classes
