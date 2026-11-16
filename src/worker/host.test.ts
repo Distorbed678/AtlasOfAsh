@@ -48,7 +48,10 @@ describe('GameHost', () => {
   it('advances in real time on tick', async () => {
     const h = makeHost();
     await h.host.init();
-    await h.host.handle({ type: 'command', cmd: { type: 'startAction', actionId: 'action.demo_kindle' } });
+    await h.host.handle({
+      type: 'command',
+      cmd: { type: 'startAction', actionId: 'action.demo_kindle' },
+    });
     for (let i = 0; i < 100; i++) {
       h.advanceClock(100);
       await h.host.tick();
@@ -61,7 +64,10 @@ describe('GameHost', () => {
     const store = new MemoryStore();
     const first = makeHost(store, 0);
     await first.host.init();
-    await first.host.handle({ type: 'command', cmd: { type: 'startAction', actionId: 'action.demo_kindle' } });
+    await first.host.handle({
+      type: 'command',
+      cmd: { type: 'startAction', actionId: 'action.demo_kindle' },
+    });
     await request(first, { type: 'request', reqId: 1, req: { type: 'saveNow' } });
 
     // Come back 8 hours later.
@@ -76,7 +82,10 @@ describe('GameHost', () => {
     const storeA = new MemoryStore();
     const a = makeHost(storeA, 0);
     await a.host.init();
-    await a.host.handle({ type: 'command', cmd: { type: 'startAction', actionId: 'action.demo_kindle' } });
+    await a.host.handle({
+      type: 'command',
+      cmd: { type: 'startAction', actionId: 'action.demo_kindle' },
+    });
     for (let i = 0; i < 36_000; i++) {
       a.advanceClock(100);
       await a.host.tick();
@@ -85,7 +94,10 @@ describe('GameHost', () => {
     const storeB = new MemoryStore();
     const b0 = makeHost(storeB, 0);
     await b0.host.init();
-    await b0.host.handle({ type: 'command', cmd: { type: 'startAction', actionId: 'action.demo_kindle' } });
+    await b0.host.handle({
+      type: 'command',
+      cmd: { type: 'startAction', actionId: 'action.demo_kindle' },
+    });
     await request(b0, { type: 'request', reqId: 1, req: { type: 'saveNow' } });
     const b = makeHost(storeB, HOUR);
     await b.host.init();
@@ -94,10 +106,23 @@ describe('GameHost', () => {
     expect(strip(b.host.state)).toEqual(strip(a.host.state));
   });
 
+  it('saves immediately after a player command', async () => {
+    const h = makeHost();
+    await h.host.init();
+    await h.host.handle({
+      type: 'command',
+      cmd: { type: 'startAction', actionId: 'action.demo_kindle' },
+    });
+    expect((await h.saves.load())!.action?.actionId).toBe('action.demo_kindle');
+  });
+
   it('autosaves periodically', async () => {
     const h = makeHost();
     await h.host.init();
-    await h.host.handle({ type: 'command', cmd: { type: 'startAction', actionId: 'action.demo_kindle' } });
+    await h.host.handle({
+      type: 'command',
+      cmd: { type: 'startAction', actionId: 'action.demo_kindle' },
+    });
     for (let t = 0; t <= AUTOSAVE_MS; t += 100) {
       h.advanceClock(100);
       await h.host.tick();
@@ -116,7 +141,11 @@ describe('GameHost', () => {
 
     const other = decodeSave(exported);
     other.gold = 999;
-    const imp = await request(h, { type: 'request', reqId: 2, req: { type: 'importSave', data: encodeSave(other) } });
+    const imp = await request(h, {
+      type: 'request',
+      reqId: 2,
+      req: { type: 'importSave', data: encodeSave(other) },
+    });
     expect(imp.ok).toBe(true);
     expect(h.host.state.gold).toBe(999);
     expect((await h.saves.listBackups()).length).toBeGreaterThan(0);
@@ -126,7 +155,11 @@ describe('GameHost', () => {
     const h = makeHost();
     await h.host.init();
     h.host.state.gold = 5;
-    const res = await request(h, { type: 'request', reqId: 1, req: { type: 'importSave', data: 'garbage' } });
+    const res = await request(h, {
+      type: 'request',
+      reqId: 1,
+      req: { type: 'importSave', data: 'garbage' },
+    });
     expect(res.ok).toBe(false);
     expect(h.host.state.gold).toBe(5);
   });
@@ -134,7 +167,10 @@ describe('GameHost', () => {
   it('dev skip simulates time and emits a summary', async () => {
     const h = makeHost();
     await h.host.init();
-    await h.host.handle({ type: 'command', cmd: { type: 'startAction', actionId: 'action.demo_sift' } });
+    await h.host.handle({
+      type: 'command',
+      cmd: { type: 'startAction', actionId: 'action.demo_sift' },
+    });
     await h.host.handle({ type: 'devSkip', ms: HOUR });
     expect(h.host.state.stats.actionsCompleted).toBe(HOUR / 5000);
     expect(h.messages.some((m) => m.type === 'awaySummary' && m.reason === 'devSkip')).toBe(true);

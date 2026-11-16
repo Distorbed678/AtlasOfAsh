@@ -55,7 +55,8 @@ export const en = {
   'settings.backupsHelp': 'The game keeps your last {n} automatic backups (one every 10 minutes).',
   'settings.noBackups': 'No backups yet.',
   'settings.restore': 'Restore',
-  'settings.restoreConfirm': 'Restore the backup from {date}? Your current progress will be replaced.',
+  'settings.restoreConfirm':
+    'Restore the backup from {date}? Your current progress will be replaced.',
   'settings.debug': 'Debug bundle',
   'settings.debugHelp':
     'Downloads your save, RNG seeds and game version so a bug can be reproduced exactly.',

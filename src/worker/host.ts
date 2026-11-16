@@ -12,7 +12,7 @@ export const TICK_MS = 100;
 export const OFFLINE_THRESHOLD_MS = 5_000;
 /** Only show the away report for gaps at least this long. */
 export const AWAY_SUMMARY_MIN_MS = 60_000;
-export const AUTOSAVE_MS = 30_000;
+export const AUTOSAVE_MS = 10_000;
 export const BACKUP_MS = 10 * 60_000;
 /** Sim time advanced per catch-up chunk before checking the wall clock. */
 const CATCHUP_CHUNK_MS = 60_000;
@@ -93,6 +93,8 @@ export class GameHost {
       case 'command':
         applyCommand(this.state, msg.cmd);
         this.postSnapshot();
+        // Player decisions are saved immediately so a reload never forgets them.
+        await this.persist(this.deps.now());
         return;
       case 'request':
         await this.handleRequest(msg.reqId, msg.req);
@@ -100,6 +102,7 @@ export class GameHost {
       case 'devSkip':
         await this.catchUp(Math.max(0, msg.ms), 'devSkip');
         this.postSnapshot();
+        await this.persist(this.deps.now());
         return;
       case 'devSpeed':
         this.speed = Math.min(1000, Math.max(1, msg.speed));
@@ -108,6 +111,7 @@ export class GameHost {
         if (msg.itemId) addItem(this.state, CONTENT.items.get(msg.itemId).id, msg.qty ?? 1);
         if (msg.gold) this.state.gold += msg.gold;
         this.postSnapshot();
+        await this.persist(this.deps.now());
         return;
     }
   }
@@ -183,7 +187,11 @@ export class GameHost {
         advance(this.state, Math.min(target, this.state.time + CATCHUP_CHUNK_MS));
         if (now() - lastYield >= CATCHUP_YIELD_MS) {
           if (showProgress)
-            post({ type: 'catchUpProgress', done: this.state.time - before.time, total: durationMs });
+            post({
+              type: 'catchUpProgress',
+              done: this.state.time - before.time,
+              total: durationMs,
+            });
           await yieldToEventLoop();
           lastYield = now();
         }
