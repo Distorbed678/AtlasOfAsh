@@ -95,8 +95,19 @@ export type ActionDef = SimpleAction | RockAction | CatchAction | BundleAction |
 
 export type Attribute = 'str' | 'dex' | 'int';
 
+/** Class starting stats at level 1 and growth per level. */
+export interface ClassBase {
+  readonly life: number;
+  readonly lifePerLevel: number;
+  readonly mana: number;
+  readonly manaPerLevel: number;
+  readonly spirit: number;
+  readonly energyShield: number;
+}
+
 export interface ClassDef {
   readonly id: string;
+  readonly base: ClassBase;
   readonly attributes: readonly Attribute[];
   /** Ids of the two favoured weapon types (weapon content arrives in Phase 3). */
   readonly weapons: readonly [string, string];

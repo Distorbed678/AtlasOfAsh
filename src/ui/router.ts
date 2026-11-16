@@ -10,9 +10,19 @@ export type Route =
   | { page: 'workers' }
   | { page: 'settings' }
   | { page: 'dev' }
-  | { page: 'credits' };
+  | { page: 'credits' }
+  | { page: 'codex' };
 
-const SIMPLE = ['overview', 'bank', 'town', 'workers', 'settings', 'dev', 'credits'] as const;
+const SIMPLE = [
+  'overview',
+  'bank',
+  'town',
+  'workers',
+  'settings',
+  'dev',
+  'credits',
+  'codex',
+] as const;
 
 /** `skill.mining` ↔ `#/skill/mining` */
 export function skillSlug(skillId: SkillId): string {

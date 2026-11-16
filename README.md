@@ -4,7 +4,7 @@ An idle game with deep ARPG buildcrafting: Melvor-style skilling and one-action-
 
 **Play (dev builds):** https://distorbed678.github.io/AtlasOfAsh/
 
-Status: pre-alpha. Phases 0 (foundation) and 1 (skilling, workers, Town) are done. See [docs/PLAN.md](docs/PLAN.md) for the full design and roadmap, and [CHANGELOG.md](CHANGELOG.md) for what's new.
+Status: pre-alpha. Phases 0 (foundation), 1 (skilling, workers, Town) and 2 (stat engine + Codex) are done. See [docs/PLAN.md](docs/PLAN.md) for the full design and roadmap, and [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## Development
 

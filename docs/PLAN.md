@@ -116,6 +116,23 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Tier-1 wages | Whole-gold rounding makes tier-1 workers break even (not 120%); accepted, since workers still never profit |
 | XP pacing | Uniformly **1.5× slower** than the first draft (tier XP 7 → 133). Pacing report: level 99 in ~315–373 h of active play per skill (~2 weeks of 24/7 idling); level 50 in ~7–9 h. Re-run with `PACING=1 npx vitest run src/engine/balance` |
 
+### 1.9 Phase 2 decisions (stat & damage engine)
+| Area | Decision |
+|---|---|
+| Attributes | PoE2-style, lean: Str +2 life per 5 · Dex +5 accuracy each · Int +2 mana per 5. Mainly gear/gem requirements |
+| Class bases (level 1, +per level) | Ironclad 70 life / 30 mana (+14 / +3) · Vanguard 60 / 35 (+13 / +3.5) · Skirmisher 50 / 40 (+12 / +4) · Adept 45 / 45 (+11 / +4.5) + 20 ES · Arcanist 40 / 60 (+10 / +6) + 20 ES · Zealot 55 / 45 (+12 / +4.5) + 30 Spirit. Others start with 0 Spirit |
+| Crit | Base crit chance from the weapon (attacks) or skill (spells), scaled by increased crit chance; crits deal **+100%** damage, raised by critical damage bonus |
+| Hit chance | 1.2 × accuracy / (accuracy + evasion / 4), clamped to 5–100%, resolved with **entropy**. Base accuracy = 6 × level + 5 per Dex. Spells always hit |
+| Armour | Hit-size scaling: reduction = armour / (armour + 10 × hit), max 90% |
+| Resistances | 75% cap (mods can raise to 90%). Each act boss permanently lowers resists by 10% (−60% after Act 6). Chaos starts at 0% |
+| Block | 50% cap (keystones up to 75%) |
+| Energy shield | Recharge after **4s** without damage, at **12.5%/s** of max ES. Chaos damage does not bypass ES |
+| Regen | Mana 2%/s of max; life **1%/s** of max |
+| Leech | Recovers over 1s; total leech capped at 20% of max life per second (raisable) |
+| Ailments | **Threshold-based** (PoE2): ignite, shock, chill and freeze happen innately, scaled by hit damage vs the enemy's ailment threshold (≈ its max life). **Bleed and poison need chance mods**; their strength scales with the hit |
+| Ailment numbers | Ignite 20%/s of the fire hit for 4s (strongest only) · Bleed 15%/s of the physical hit for 5s (strongest only) · Poison 20%/s of physical + chaos for 2s (stacks) · Shock: target takes 20% more damage for 4s · Chill: up to 30% slow for 2s · Freeze: cold builds up; at 100% of threshold → frozen 3s. Only ailment/DoT-specific modifiers scale ailments (no double-dipping from "increased fire damage") |
+| Codex (Phase 2) | Character sheet for players + a **dev test bench** (add any mods, test skill, target dummy) showing the full source breakdown |
+
 ---
 
 ## 2. Classes
@@ -263,7 +280,7 @@ Each phase runs on its own branch (`phase-N-name`), with one commit per feature,
 |---|---|---|
 | 0 | **Foundation** ✅ | Vite/React/TS scaffold, lint/test, seeded RNG, event scheduler, Worker host, save/load + migrations + backups, offline catch-up framework, dev console, UI shell (sidebar, dark theme, responsive), number formatting, **GitHub Pages deploy + CI**, T3 run scripts |
 | 1 | **Skilling core** ✅ | Character creation (realm + mode), skill framework (XP curve, mastery + pool), bank, gold, vendor; Mining, Woodcutting, Herbalism, Fishing, Thieving; **workers** + first Town buildings |
-| 2 | **Stat engine** | Modifiers, tags, damage/defence pipeline, entropy evasion, provenance; golden tests; first **Codex** panel |
+| 2 | **Stat engine** ✅ | Modifiers, tags, damage/defence pipeline, entropy evasion, provenance; golden tests; first **Codex** panel |
 | 3 | **Items and artisan skills** | Bases, affixes, rarities, uniques framework, tooltips, equipment; Smithing, Tailoring, Woodworking, Jewelcrafting; **Enchanting**; Ashen Brand |
 | 4 | **Combat** | 1v1 event sim, monsters + mods, zones, trip bag + Waystone, **loot filter**, death penalty, flasks + **Alchemy**, offline combat |
 | 5 | **Gems and rotation** | Uncut drops, **Gemcutting**, skill/support/spirit gems, once-per-character supports, priority list, Spirit, charges, combos, minions + threat |
