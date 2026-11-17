@@ -1,6 +1,8 @@
 import { CONTENT, SKILL_IDS } from '../../engine/content';
 import { workerSlotCount } from '../../engine/economy/town';
+import { MAX_CHARACTER_LEVEL } from '../../engine/combat/progression';
 import { skillLevel } from '../../engine/skills/actions';
+import { levelProgress } from '../../engine/skills/xp';
 import type { GameState } from '../../engine/state';
 import { nameOf, t } from '../../i18n';
 import { formatNumber } from '../../shared/format';
@@ -18,6 +20,7 @@ export function OverviewPage({ onWhatsNew }: { onWhatsNew: () => void }) {
   const def = runner ? CONTENT.actions.get(runner.actionId) : null;
   const slots = workerSlotCount(state);
   const busy = state.workers.filter((w) => w.actionId && !w.paused).length;
+  const charProg = levelProgress(state.charXp, MAX_CHARACTER_LEVEL);
 
   return (
     <div className="page">
@@ -29,7 +32,28 @@ export function OverviewPage({ onWhatsNew }: { onWhatsNew: () => void }) {
       </div>
 
       <section className="panel panel-wide">
+        <div className="xp-bar-labels">
+          <span className="xp-level">{t('topbar.level', { n: charProg.level })}</span>
+          <span className="dim small">
+            {charProg.atCap
+              ? t('skill.maxed')
+              : t('skill.xp', {
+                  current: formatNumber(Math.floor(charProg.current)),
+                  needed: formatNumber(charProg.needed),
+                })}
+          </span>
+        </div>
+        <ProgressBar value={charProg.fraction} label={t('topbar.level', { n: charProg.level })} />
+      </section>
+
+      <section className="panel panel-wide">
         <h2 className="section-title">{t('overview.current')}</h2>
+        {state.combat && (
+          <a href={href({ page: 'combat' })}>
+            {t('topbar.fighting', { zone: nameOf(state.combat.zoneId) })} ·{' '}
+            {t('combat.kills', { n: state.combat.kills })}
+          </a>
+        )}
         {def && runner ? (
           <>
             <a href={href({ page: 'skill', skillId: def.skillId })}>
@@ -41,7 +65,7 @@ export function OverviewPage({ onWhatsNew }: { onWhatsNew: () => void }) {
             />
           </>
         ) : (
-          <p className="dim">{t('overview.none')}</p>
+          !state.combat && <p className="dim">{t('overview.none')}</p>
         )}
       </section>
 

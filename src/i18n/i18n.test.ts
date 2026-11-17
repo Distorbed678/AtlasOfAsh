@@ -18,6 +18,10 @@ describe('i18n', () => {
       ...CONTENT.skills.all(),
       ...CONTENT.classes.all(),
       ...CONTENT.buildings.all(),
+      ...CONTENT.zones.all(),
+      ...CONTENT.monsters.all(),
+      ...CONTENT.monsterMods.all(),
+      ...CONTENT.bases.all(),
     ];
     for (const c of all) expect(hasTranslation(c.id), c.id).toBe(true);
     for (const i of CONTENT.items.all())

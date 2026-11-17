@@ -287,7 +287,7 @@ export class GameHost {
         cause: state.dead.cause,
         level: state.dead.level,
         at: this.deps.now(),
-        playedMs: state.time,
+        playedMs: state.dead.at,
       },
     });
     this.deps.post({ type: 'characterDied', name: state.character.name, cause: state.dead.cause });

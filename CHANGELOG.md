@@ -2,6 +2,23 @@
 
 All notable changes to Atlas of Ash. Shown in-game under "What's new".
 
+## [0.4.0] - 2026-11-16
+
+### Added
+
+- Combat! Fight through Act 1, the Cinder Coast: 8 zones from Ashfall Beach to the Ember Gate, 18 monsters in four families (drowned dead, ash wisps, coastal brutes, crawlers), with magic and rare monsters carrying modifiers like Hulking, Hasted or Vampiric.
+- Character levels from combat XP. Your class's life, mana and accuracy grow with level, and gear now has level requirements.
+- Basic Attack with your weapon, and Basic Spell when you hold a wand, staff, sceptre or focus (costs mana).
+- Ailments on monsters: ignite, bleed, poison, shock, chill and freeze.
+- Alchemy: brew life, mana, granite, swiftness, warding and cleansing flasks in 10 tiers. Equip up to five, set when each is used, and they refill as you fight.
+- Loot: gold, gear of the zone's tier, monster hides (leather tiers 2–10), Arcane Dust, Enchanting reagents and uncut gems (cut them once Gemcutting arrives).
+- Trip bag (100 stacks): bank it any time (this restarts both attack timers), or build the new Waystone in the Town to auto-bank every 60 minutes.
+- Loot filter: rules that keep, auto-sell, auto-disenchant or ignore drops before they reach your bag, with three presets.
+- Zone predictions: kills, XP, gold and gear per hour, and how dangerous each zone is for you right now.
+- Attempt to retreat: the more life you have, the better your odds.
+- Death: Standard characters lose 10% of their level's XP and the trip bag. Hardcore characters move to Standard. Mortal characters are gone, remembered in a memorial on the character screen.
+- Combat log, and combat results in the "While you were away" report.
+
 ## [0.3.0] - 2026-11-16
 
 ### Added

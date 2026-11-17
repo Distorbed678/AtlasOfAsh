@@ -7,6 +7,7 @@ import { advance } from '../sim';
 import { createInitialState, type GameState } from '../state';
 import { HOUR } from '../testUtils';
 import { combatContext } from './context';
+import { predictZone } from './predict';
 import { bagStacks, collectDrops, emptyBag, filterAction } from './loot';
 import { monsterBaseline, monsterStats } from './monsterStats';
 import { characterLevel, characterXpForLevel, xpAfterDeath } from './progression';
@@ -221,5 +222,20 @@ describe('gear level requirements', () => {
     const s = createInitialState(1, 0);
     s.stash.tabs[0]!.items.push(newItem(1, 'base.mace_t2', 10, 'normal', new Rng(seedRng(1))));
     expect(() => applyCommand(s, { type: 'equip', uid: 1, slot: 'mainHand' })).toThrow(/level 10/);
+  });
+});
+
+describe('zone predictions', () => {
+  it('predict kills/h close to the simulation and rate danger', () => {
+    const s = geared(4, 5);
+    s.equipment.flask1 = undefined;
+    const p = predictZone(s, 'zone.drowned_hamlet');
+    applyCommand(s, { type: 'startCombat', zoneId: 'zone.drowned_hamlet' });
+    advance(s, 2 * HOUR);
+    const simKills = s.stats.kills / 2;
+    expect(p.killsPerHour / simKills).toBeGreaterThan(0.7);
+    expect(p.killsPerHour / simKills).toBeLessThan(1.4);
+    const naked = createInitialState(1, 0);
+    expect(predictZone(naked, 'zone.ember_gate').risk).toBe('deadly');
   });
 });

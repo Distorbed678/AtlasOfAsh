@@ -67,7 +67,7 @@ export function EquipmentPage() {
         <aside className="item-detail stack">
           {equipped ? (
             <>
-              <ItemTooltip item={equipped} attributes={attrs} />
+              <ItemTooltip item={equipped} attributes={attrs} level={sheet.level} />
               <button className="btn" onClick={() => void command({ type: 'unequip', slot })}>
                 {t('equip.unequip')}
               </button>

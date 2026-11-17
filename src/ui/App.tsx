@@ -10,6 +10,8 @@ import { useFlag } from './flags';
 import { BankPage } from './pages/BankPage';
 import { CharacterSelect } from './pages/CharacterSelect';
 import { CodexPage } from './pages/CodexPage';
+import { CombatPage } from './pages/CombatPage';
+import { FilterPage } from './pages/FilterPage';
 import { CreditsPage } from './pages/CreditsPage';
 import { DevPage } from './pages/DevPage';
 import { EquipmentPage } from './pages/EquipmentPage';
@@ -91,6 +93,10 @@ function Page({ route, onWhatsNew }: { route: Route; onWhatsNew: () => void }) {
       return <CodexPage />;
     case 'stash':
       return <StashPage />;
+    case 'combat':
+      return <CombatPage />;
+    case 'filter':
+      return <FilterPage />;
     case 'equipment':
       return <EquipmentPage />;
     case 'dev':

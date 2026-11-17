@@ -7,6 +7,10 @@ import { command, useGameState } from '../bridge';
 import { Icon } from '../components/Icon';
 
 function effectText(effect: BuildingEffect, value: number): string {
+  if (effect === 'autoBankMinutes')
+    return t('town.effect.autoBankMinutes', {
+      value: value > 0 ? t('town.autoBankEvery', { n: value }) : t('town.autoBankOff'),
+    });
   const v =
     effect === 'workerEfficiency' || effect === 'workerXpShare'
       ? formatPercent(value, 0)
