@@ -36,6 +36,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   2: (s) => ({ ...s, version: 3 }),
   // v3 → v4 (Phase 4): character XP, combat, flask rules, loot filter. Defaults via normalizeState.
   3: (s) => ({ ...s, version: 4 }),
+  // v4 → v5 (Phase 5): gems, skill bar, spirit. Defaults via normalizeState; drop any in-progress fight.
+  4: (s) => ({ ...s, version: 5, combat: null }),
 };
 
 export function migrate(

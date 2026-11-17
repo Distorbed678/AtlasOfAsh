@@ -129,6 +129,15 @@ export function computeCharacter(
   const lvl = input.level - 1;
   const life = mods.query('life', cls.base.life + cls.base.lifePerLevel * lvl, ctx, classSource);
   const mana = mods.query('mana', cls.base.mana + cls.base.manaPerLevel * lvl, ctx, classSource);
+  // +30 Spirit at levels 10, 30 and 50 (stand-ins until act bosses grant it in Phase 7).
+  const milestones = [10, 30, 50].filter((l) => input.level >= l).length;
+  if (milestones)
+    mods.add({
+      stat: 'spirit',
+      kind: 'flat',
+      value: 30 * milestones,
+      source: { kind: 'class', id: 'milestones', label: 'Level milestones' },
+    });
   const spirit = mods.query('spirit', cls.base.spirit, ctx, classSource);
   const energyShield = mods.query('energyShield', cls.base.energyShield, ctx, classSource);
   const armour = mods.query('armour', 0, ctx);

@@ -112,7 +112,7 @@ describe('character sheet', () => {
   it('regen and ES recharge', () => {
     const s = sheet([flat('life', 926), flat('energyShield', 100), flat('esRechargeStart', 100)]);
     expect(s.lifeRegenPerSec).toBeCloseTo(10); // 1% of 1000
-    expect(s.manaRegenPerSec).toBeCloseTo(0.68); // 2% of (30 + 4 from base Int)
+    expect(s.manaRegenPerSec).toBeCloseTo(1.7); // 5% of (30 + 4 from base Int)
     expect(s.esRechargePerSec).toBeCloseTo(12.5); // 12.5% of 100
     expect(s.esRechargeDelaySec).toBeCloseTo(2); // 4s / (1 + 100%)
   });

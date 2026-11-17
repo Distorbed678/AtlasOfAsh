@@ -262,12 +262,15 @@ export const itemsEn: Record<string, string> = {
   'skill.tailoring': 'Tailoring',
   'skill.jewelcrafting': 'Jewelcrafting',
   'skill.enchanting': 'Enchanting',
+  'skill.gemcutting': 'Gemcutting',
   'skill.smithing.desc': 'Smelt ore into bars, then forge weapons, shields and heavy armour.',
   'skill.woodworking.desc':
     'Plane logs into planks, then craft bows, crossbows, staves, wands and quivers.',
   'skill.tailoring.desc':
     'Tan hides and weave fibre, then sew light armour, robes, belts and foci.',
   'skill.jewelcrafting.desc': 'Cut gems and set them into rings and amulets.',
+  'skill.gemcutting.desc':
+    'Cut uncut gems into skill, support and spirit gems, polish their quality and open support sockets.',
   'skill.enchanting.desc':
     'Brew reagents from arcane dust, then use them to reshape the affixes on your gear.',
   ...Object.fromEntries(Object.entries(CLASS_NAMES).map(([k, v]) => [`baseclass.${k}`, v])),

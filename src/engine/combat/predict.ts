@@ -3,7 +3,7 @@ import { FLASK_SLOTS } from '../content/types';
 import { armourReduction } from '../stats/formulas';
 import type { DamageType } from '../stats/types';
 import type { GameState } from '../state';
-import { combatContext } from './context';
+import { combatContext, type CombatContext, type OffenceContext } from './context';
 import { CHARGES_PER_HIT_TAKEN, CHARGES_PER_KILL, flaskFor } from './flasks';
 import { DROP_CHANCES } from './loot';
 import { RARITY_CHANCE, RARITY_SCALE } from './monsterStats';
@@ -45,6 +45,45 @@ const AVG = {
     RARITY_CHANCE.rare * RARITY_SCALE.rare.lootRolls,
 };
 
+/** The damaging skill the rotation leans on: the first usable, untriggered one in the bar. */
+export function mainOffence(ctx: CombatContext): OffenceContext {
+  const sc = ctx.skills.find((s) => s?.usable && s.offence && !s.trigger);
+  return sc?.offence ?? ctx.spell ?? ctx.attack;
+}
+
+/**
+ * Expected damage per second: the main skill (blended with the free fallback when
+ * mana regeneration can't keep up) plus persistent minions.
+ */
+export function effectiveDps(ctx: CombatContext): {
+  dps: number;
+  skillDps: number;
+  minionDps: number;
+  leechDps: number;
+} {
+  const main = mainOffence(ctx);
+  const fallback = ctx.spell ?? ctx.attack;
+  let skillDps = main.dps;
+  let leechDps = (main.dps * main.leechPct) / 100;
+  if (main !== fallback && main.manaCost > 0) {
+    const need = (main.manaCost * 1000) / main.intervalMs;
+    const frac = Math.min(1, ctx.manaRegenPerSec / need);
+    skillDps = frac * main.dps + (1 - frac) * fallback.dps;
+    leechDps =
+      (frac * main.dps * main.leechPct + (1 - frac) * fallback.dps * fallback.leechPct) / 100;
+  }
+  let minionDps = 0;
+  for (const sc of ctx.skills) {
+    const m = sc?.minion;
+    if (!m || !sc.usable || (m.persistent && !sc.reserved)) continue;
+    const uptime = m.persistent
+      ? 1
+      : Math.min(1, (m.durationMs ?? 5000) / Math.max(sc.cooldownMs, m.durationMs ?? 5000));
+    minionDps += ((m.count * m.damage * 1000) / m.intervalMs) * uptime * 0.85;
+  }
+  return { dps: skillDps + minionDps, skillDps, minionDps, leechDps };
+}
+
 /**
  * Steady-state estimate of fighting in a zone with current gear, from the same
  * combat context the simulation uses (hit chance, crit, mitigation, regen).
@@ -77,8 +116,8 @@ export function predictZone(
       level: zone.level,
     };
     const ctx = combatContext(probe, probe.time, content);
-    const off = ctx.spell ?? ctx.attack;
-    const ttk = (ctx.monster.maxLife * AVG.life) / Math.max(0.01, off.dps);
+    const eff = effectiveDps(ctx);
+    const ttk = (ctx.monster.maxLife * AVG.life) / Math.max(0.01, eff.dps);
     let perHit = 0;
     let maxHit = 0;
     for (const [type, avg] of Object.entries(ctx.monster.hitByType) as [DamageType, number][]) {
@@ -92,8 +131,7 @@ export function predictZone(
       (1000 / ctx.monster.attackIntervalMs) * ctx.monsterHitChance * (1 - ctx.block);
     const takenDps = perHit * hitsPerSec;
     pool = ctx.maxLife + ctx.maxEs;
-    const sustain =
-      ctx.lifeRegenPerSec + Math.min(ctx.leechCapPerSec, (off.dps * off.leechPct) / 100);
+    const sustain = ctx.lifeRegenPerSec + Math.min(ctx.leechCapPerSec, eff.leechDps);
     const share = weight / totalWeight;
     let flask = 0;
     for (const slot of FLASK_SLOTS) {
@@ -109,7 +147,7 @@ export function predictZone(
     wDrain += share * (takenDps - sustain) * ttk;
     wXp += share * ctx.monster.xp;
     wMaxHit = Math.max(wMaxHit, maxHit);
-    monsters.push({ monsterId, weight, ttkSec: ttk, playerDps: off.dps, takenDps, maxHit });
+    monsters.push({ monsterId, weight, ttkSec: ttk, playerDps: eff.dps, takenDps, maxHit });
   }
 
   const killsPerHour = 3600 / wTtk;

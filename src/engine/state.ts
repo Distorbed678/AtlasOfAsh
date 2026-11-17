@@ -1,13 +1,14 @@
 import { SKILL_IDS } from './content';
 import type { SkillId } from './content/types';
 import { deriveSeed, Rng, seedRng, type RngState } from './core/rng';
-import type { BaseClass, EquipSlot, FlaskSlot, ItemCategory } from './content/types';
+import type { BaseClass, ChargeType, EquipSlot, FlaskSlot, ItemCategory } from './content/types';
 import type { MonsterRarity } from './combat/monsterStats';
 import type { Rarity } from './items/types';
+import type { Mod } from './stats/types';
 import type { ItemInstance } from './items/types';
 
 /** Bump when the save shape changes, and add a migration in save/migrations.ts. */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export type CharacterMode = 'standard' | 'hardcore' | 'mortal';
 export const CHARACTER_MODES: readonly CharacterMode[] = ['standard', 'hardcore', 'mortal'];
@@ -45,6 +46,57 @@ export interface MonsterInstance {
   chill?: { pct: number; until: number };
   frozenUntil?: number;
   freezeBuildup: number;
+  debuffs: MonsterDebuff[];
+}
+
+// ---------------------------------------------------------------- Gems
+
+export interface GemInstance {
+  uid: number;
+  gemId: string;
+  /** Gem XP (level derives from it, capped at 20). */
+  xp: number;
+  quality: number;
+  /** Skill gems: number of support slots (2–5). */
+  sockets: number;
+  /** Skill gems: support gem uids per slot. */
+  supports: (number | null)[];
+}
+
+export type SkillRule =
+  | { kind: 'always' }
+  | { kind: 'lifeBelow'; value: number }
+  | { kind: 'manaAbove'; value: number }
+  | { kind: 'targetLacksDebuff' }
+  | { kind: 'buffNotActive' }
+  | { kind: 'chargesAtLeast'; charge: ChargeType; value: number }
+  | { kind: 'comboAtLeast'; value: number };
+
+export interface SkillSlot {
+  gemUid: number | null;
+  rule: SkillRule;
+}
+
+export interface MinionInstance {
+  id: number;
+  gemUid: number;
+  life: number;
+  maxLife: number;
+  nextAt: number;
+  /** Summoned minions expire. */
+  until?: number;
+  /** Persistent minions revive at this time after dying. */
+  reviveAt?: number;
+}
+
+export interface MonsterDebuff {
+  gemUid: number;
+  until: number;
+  curse: boolean;
+  resistDown: number;
+  damageTaken: number;
+  slow: number;
+  armourBreak: number;
 }
 
 export interface FlaskState {
@@ -81,6 +133,16 @@ export interface CombatState {
   bag: TripBag;
   lastBankAt: number;
   kills: number;
+  charges: Record<ChargeType, { n: number; until: number }>;
+  combo: { points: number; lastHitAt: number };
+  /** Gem uid → time the skill (or its trigger) is ready again. */
+  cooldowns: Record<number, number>;
+  buffs: { gemUid: number; until: number; mods: Mod[] }[];
+  guard?: { absorb: number; until: number };
+  minions: MinionInstance[];
+  nextMinionId: number;
+  /** For the UI: the last skill used. */
+  lastSkill?: string;
 }
 
 export type FlaskRuleMode = 'off' | 'lifeBelow' | 'manaBelow' | 'whenInactive';
@@ -223,8 +285,14 @@ export interface GameState {
   combat: CombatState | null;
   combatSettings: CombatSettings;
   lootFilter: LootFilter;
-  /** Bumped whenever equipment changes, so cached combat stats are rebuilt. */
+  /** Bumped whenever equipment or gems change, so cached combat stats are rebuilt. */
   gearVersion: number;
+  /** Cut gems (skill, support and spirit). */
+  gems: GemInstance[];
+  /** The 5-slot priority list. */
+  skillBar: SkillSlot[];
+  /** Active spirit gem uids (reserve Spirit). */
+  activeSpirit: number[];
   /** Set when a Mortal character dies (the host then deletes the save). */
   dead?: { at: number; cause: string; level: number };
   /** The most recent Enchanting result (for UI feedback). */
@@ -281,6 +349,9 @@ export function createInitialState(
     },
     lootFilter: { rules: [], nextId: 1 },
     gearVersion: 0,
+    gems: [],
+    skillBar: Array.from({ length: 5 }, () => ({ gemUid: null, rule: { kind: 'always' } })),
+    activeSpirit: [],
     stats: {
       actionsCompleted: 0,
       workerActions: 0,

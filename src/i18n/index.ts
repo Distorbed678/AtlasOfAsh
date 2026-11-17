@@ -2,6 +2,7 @@ import { combatEn } from './combat.en';
 import { contentEn } from './content.en';
 import { en, type TKey } from './en';
 import { flavourEn } from './flavour.en';
+import { gemsEn } from './gems.en';
 import { itemsEn } from './items.en';
 
 export type { TKey } from './en';
@@ -11,6 +12,7 @@ const english: Record<string, string> = {
   ...contentEn,
   ...itemsEn,
   ...combatEn,
+  ...gemsEn,
   ...flavourEn,
   ...en,
 };

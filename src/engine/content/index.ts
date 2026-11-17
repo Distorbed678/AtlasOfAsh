@@ -2,6 +2,7 @@ import { AFFIXES, ASHEN_AFFIXES } from './affixes';
 import { ARTISAN_ACTIONS, ARTISAN_SKILLS } from './artisan';
 import { BASES } from './bases';
 import { CLASSES } from './classes';
+import { ALL_GEMS } from './gems';
 import { FLASK_ACTIONS, FLASK_AFFIXES, FLASK_BASES } from './flasks';
 import { MONSTER_MODS, MONSTERS, UNCUT_GEMS, ZONES } from './monsters';
 import { MATERIAL_ITEMS, REAGENT_ITEMS } from './materials';
@@ -21,6 +22,7 @@ import type {
   MonsterDef,
   MonsterModDef,
   ZoneDef,
+  GemDef,
 } from './types';
 import { UNIQUES } from './uniques';
 
@@ -52,6 +54,7 @@ export const CONTENT = {
   monsters: new ContentRegistry<MonsterDef>('monster', MONSTERS),
   monsterMods: new ContentRegistry<MonsterModDef>('monstermod', MONSTER_MODS),
   zones: new ContentRegistry<ZoneDef>('zone', ZONES),
+  gems: new ContentRegistry<GemDef>('gem', ALL_GEMS),
 } as const;
 
 export type Content = typeof CONTENT;

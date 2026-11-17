@@ -159,8 +159,9 @@ export const MONSTER_MODS: MonsterModDef[] = [
   { id: 'monstermod.warded', resistAll: 30 },
 ];
 
-/** Uncut gems drop now and are cut by Gemcutting in Phase 5. */
+/** Uncut gems drop in combat; Gemcutting cuts them into gems of the same tier. */
 export const UNCUT_GEMS: ItemDef[] = [1, 2, 3, 4, 5].flatMap((t) => [
   { id: `item.uncut_skill_gem_t${t}`, category: 'gem' as const, tier: t, sellPrice: 50 * t },
   { id: `item.uncut_support_gem_t${t}`, category: 'gem' as const, tier: t, sellPrice: 40 * t },
+  { id: `item.uncut_spirit_gem_t${t}`, category: 'gem' as const, tier: t, sellPrice: 60 * t },
 ]);

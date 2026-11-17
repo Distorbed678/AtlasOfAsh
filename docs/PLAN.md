@@ -127,7 +127,7 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Resistances | 75% cap (mods can raise to 90%). Each act boss permanently lowers resists by 10% (−60% after Act 6). Chaos starts at 0% |
 | Block | 50% cap (keystones up to 75%) |
 | Energy shield | Recharge after **4s** without damage, at **12.5%/s** of max ES. Chaos damage does not bypass ES |
-| Regen | Mana 2%/s of max; life **1%/s** of max |
+| Regen | Mana **5%/s** of max (raised from 2% in Phase 5 so skills can be sustained); life **1%/s** of max |
 | Leech | Recovers over 1s; total leech capped at 20% of max life per second (raisable) |
 | Ailments | **Threshold-based** (PoE2): ignite, shock, chill and freeze happen innately, scaled by hit damage vs the enemy's ailment threshold (≈ its max life). **Bleed and poison need chance mods**; their strength scales with the hit |
 | Ailment numbers | Ignite 20%/s of the fire hit for 4s (strongest only) · Bleed 15%/s of the physical hit for 5s (strongest only) · Poison 20%/s of physical + chaos for 2s (stacks) · Shock: target takes 20% more damage for 4s · Chill: up to 30% slow for 2s · Freeze: cold builds up; at 100% of threshold → frozen 3s. Only ailment/DoT-specific modifiers scale ailments (no double-dipping from "increased fire damage") |
