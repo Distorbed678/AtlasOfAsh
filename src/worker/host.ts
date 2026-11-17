@@ -9,6 +9,7 @@ import { advance } from '../engine/sim';
 import { levelForXp, xpForLevel } from '../engine/skills/xp';
 import { CHARACTER_MODES, createInitialState, SAVE_VERSION, type GameState } from '../engine/state';
 import { summarize, takeSnapshot } from '../engine/summary';
+import type { SimEvent } from '../engine/sim';
 import type { DebugBundle, FromWorker, NewCharacter, ToWorker, WorkerRequest } from './protocol';
 
 export const TICK_MS = 100;
@@ -80,9 +81,12 @@ export class GameHost {
       // Tab was suspended / machine slept: catch up properly with a report.
       await this.catchUpOffline();
     } else {
-      advance(this.state, this.state.time + Math.round(elapsed * this.speed));
+      advance(this.state, this.state.time + Math.round(elapsed * this.speed), {
+        onEvent: (e) => this.recordEvent(e),
+      });
       this.state.lastRealTime = now;
     }
+    if (this.state && (await this.handleDeath())) return;
     this.postSnapshot();
     if (now - this.lastAutosave >= AUTOSAVE_MS) await this.persist(now);
   }
@@ -109,6 +113,7 @@ export class GameHost {
     switch (msg.type) {
       case 'devSkip':
         await this.catchUp(Math.max(0, msg.ms), 'devSkip');
+        if (await this.handleDeath()) return;
         break;
       case 'devSpeed':
         this.speed = Math.min(1000, Math.max(1, msg.speed));
@@ -237,6 +242,7 @@ export class GameHost {
     loaded.character.id = id;
     this.saves = saves;
     this.state = loaded;
+    this.log = [];
     const now = this.deps.now();
     this.lastBackup = (await saves.listBackups())[0]?.savedAt ?? 0;
     this.lastAutosave = now;
@@ -256,6 +262,42 @@ export class GameHost {
     await this.postCharacters();
   }
 
+  /** Recent combat events for the live log (not saved; not collected during catch-up). */
+  private log: SimEvent[] = [];
+
+  private recordEvent(e: SimEvent): void {
+    if (
+      !e.type.startsWith('combat') &&
+      !['death', 'flaskUsed', 'characterLevelUp', 'autoBanked'].includes(e.type)
+    )
+      return;
+    this.log.push(e);
+    if (this.log.length > 60) this.log.splice(0, this.log.length - 60);
+  }
+
+  /** Mortal characters that died are deleted, leaving a memorial in the character list. */
+  private async handleDeath(): Promise<boolean> {
+    const state = this.state;
+    if (!state?.dead || state.character.mode !== 'mortal') return false;
+    const summary = summarizeCharacter(state, this.deps.now());
+    await new SaveManager(this.deps.store, state.character.id).deleteAll();
+    await this.index.upsert({
+      ...summary,
+      memorial: {
+        cause: state.dead.cause,
+        level: state.dead.level,
+        at: this.deps.now(),
+        playedMs: state.dead.at,
+      },
+    });
+    this.deps.post({ type: 'characterDied', name: state.character.name, cause: state.dead.cause });
+    this.state = null;
+    this.saves = null;
+    this.postSnapshot();
+    await this.postCharacters();
+    return true;
+  }
+
   private async postCharacters(): Promise<void> {
     this.deps.post({ type: 'characters', characters: await this.index.list() });
   }
@@ -266,6 +308,7 @@ export class GameHost {
     const gap = Math.max(0, start - this.state.lastRealTime);
     if (gap > 0) await this.catchUp(gap, 'offline');
     if (this.state) this.state.lastRealTime = start;
+    await this.handleDeath();
   }
 
   /** Simulate `durationMs` of game time in chunks, yielding so the UI gets progress. */
@@ -333,7 +376,7 @@ export class GameHost {
   }
 
   private postSnapshot(): void {
-    this.deps.post({ type: 'snapshot', state: this.state });
+    this.deps.post({ type: 'snapshot', state: this.state, log: this.log });
   }
 }
 

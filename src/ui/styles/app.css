@@ -1825,3 +1825,217 @@ code {
     grid-template-columns: 1fr;
   }
 }
+
+/* =================== Phase 4: combat =================== */
+
+.duel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+}
+
+.duel-side {
+  align-items: stretch;
+}
+
+.duel-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+}
+
+.res-bar {
+  position: relative;
+  height: 22px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.res-fill {
+  height: 100%;
+  transition: width 0.15s linear;
+}
+
+.res-life .res-fill {
+  background: linear-gradient(90deg, #7a1f1f, #c43c3c);
+}
+.res-mana .res-fill {
+  background: linear-gradient(90deg, #1f3a7a, #3c6fc4);
+}
+.res-es .res-fill {
+  background: linear-gradient(90deg, #4a5a78, #9fb3d6);
+}
+.res-enemy .res-fill {
+  background: linear-gradient(90deg, #5a3a1a, #c4782e);
+}
+
+.res-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px #000;
+}
+
+.monster-magic {
+  color: var(--rarity-magic);
+}
+.monster-rare {
+  color: var(--rarity-rare);
+}
+
+.monster-mods {
+  color: var(--rarity-magic);
+}
+
+.ailments {
+  color: var(--accent-strong);
+}
+
+.monster-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  color: var(--text-dim);
+}
+
+.flask-row {
+  display: flex;
+  gap: 8px;
+}
+
+.flask-pip {
+  position: relative;
+  width: 18px;
+  height: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px 4px 8px 8px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.flask-pip.empty {
+  opacity: 0.3;
+}
+
+.flask-pip.active {
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.flask-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #8a8a8a;
+}
+
+.flask-life .flask-fill {
+  background: #c43c3c;
+}
+.flask-mana .flask-fill {
+  background: #3c6fc4;
+}
+.flask-granite .flask-fill {
+  background: #8f8577;
+}
+.flask-swiftness .flask-fill {
+  background: #d8c45a;
+}
+.flask-warding .flask-fill {
+  background: #6fc2a7;
+}
+.flask-cleansing .flask-fill {
+  background: #e0e0e0;
+}
+
+.risk {
+  font-weight: 600;
+}
+
+.risk-safe {
+  color: var(--good);
+}
+.risk-risky {
+  color: var(--gold);
+}
+.risk-deadly {
+  color: var(--bad);
+}
+
+.combat-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.combat-log li {
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.combat-log li.crit {
+  color: var(--accent-strong);
+}
+
+.bag-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+.flask-rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.flask-rule {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flask-rule-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pulse-combat {
+  background: var(--bad);
+}
+
+.filter-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-rule {
+  align-items: stretch;
+}
+
+.memorial {
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+@media (max-width: 800px) {
+  .duel,
+  .duel-bottom {
+    grid-template-columns: 1fr;
+  }
+}

@@ -12,6 +12,7 @@ export const SKILL_ICONS: Record<SkillId, string> = {
   'skill.tailoring': 'skill.tailoring',
   'skill.jewelcrafting': 'skill.jewelcrafting',
   'skill.enchanting': 'skill.enchanting',
+  'skill.alchemy': 'skill.alchemy',
 };
 
 const PEARLS = new Set(['item.river_pearl', 'item.black_pearl']);

@@ -1,4 +1,5 @@
 import { CONTENT } from '../../engine/content';
+import { flaskFor } from '../../engine/combat/flasks';
 import { computeItem, itemLines } from '../../engine/items/itemStats';
 import type { ItemInstance } from '../../engine/items/types';
 import { nameOf, t, tDynamic } from '../../i18n';
@@ -10,10 +11,12 @@ interface Props {
   item: ItemInstance;
   /** Current attributes, to colour unmet requirements. */
   attributes?: { str: number; dex: number; int: number };
+  /** Current character level, to colour an unmet level requirement. */
+  level?: number;
 }
 
 /** PoE-style item card: name by rarity, base properties, requirements, implicits and affixes. */
-export function ItemTooltip({ item, attributes }: Props) {
+export function ItemTooltip({ item, attributes, level }: Props) {
   const base = CONTENT.bases.get(item.baseId);
   const c = computeItem(item, itemName(item));
   const lines = displayLines(itemLines(item));
@@ -24,6 +27,7 @@ export function ItemTooltip({ item, attributes }: Props) {
   const mod = (k: Parameters<typeof c.modified.has>[0]) =>
     c.modified.has(k) ? ' tt-modified' : '';
   const reqs = (['str', 'dex', 'int'] as const).filter((a) => base.req[a] > 0);
+  const flask = flaskFor(item);
 
   return (
     <div className={`tooltip rarity-${item.rarity}${item.ashen ? ' tt-ashen' : ''}`}>
@@ -72,11 +76,36 @@ export function ItemTooltip({ item, attributes }: Props) {
           <div className={mod('energyShield')}>{t('item.es', { v: c.energyShield })}</div>
         )}
         {c.block > 0 && <div>{t('item.block', { v: c.block })}</div>}
+        {flask && (
+          <>
+            <div>
+              {flask.kind === 'life' || flask.kind === 'mana'
+                ? t('item.flask.recover', {
+                    v: Math.round(flask.amount),
+                    res: flask.kind === 'life' ? t('combat.life') : t('combat.mana'),
+                    s: flask.durationMs / 1000,
+                  })
+                : tDynamic(`item.flask.${flask.kind}`, {
+                    v: flask.amount,
+                    s: flask.durationMs / 1000,
+                  })}
+            </div>
+            <div className="dim">
+              {t('item.flask.charges', { use: flask.chargesPerUse, max: flask.maxCharges })}
+            </div>
+          </>
+        )}
       </div>
 
-      {reqs.length > 0 && (
+      {(reqs.length > 0 || base.levelReq > 1) && (
         <div className="tt-req">
           {t('item.requires')}{' '}
+          {base.levelReq > 1 && (
+            <span className={level !== undefined && level < base.levelReq ? 'bad' : ''}>
+              {t('item.levelReq', { n: base.levelReq })}
+              {reqs.length > 0 ? ', ' : ''}
+            </span>
+          )}
           {reqs.map((a, i) => (
             <span key={a} className={attributes && attributes[a] < base.req[a] ? 'bad' : ''}>
               {i > 0 ? ', ' : ''}

@@ -56,7 +56,8 @@ export type SkillId =
   | 'skill.woodworking'
   | 'skill.tailoring'
   | 'skill.jewelcrafting'
-  | 'skill.enchanting';
+  | 'skill.enchanting'
+  | 'skill.alchemy';
 
 export interface RareFind {
   readonly itemId: string;
@@ -159,7 +160,8 @@ export interface BuildingTier {
   readonly items: Readonly<Record<string, number>>;
 }
 
-export type BuildingEffect = 'workerSlots' | 'workerEfficiency' | 'workerXpShare' | 'bankSlots';
+export type BuildingEffect =
+  'workerSlots' | 'workerEfficiency' | 'workerXpShare' | 'bankSlots' | 'autoBankMinutes';
 
 export interface BuildingDef {
   readonly id: string;
@@ -182,7 +184,12 @@ export type EquipSlot =
   | 'belt'
   | 'amulet'
   | 'ring1'
-  | 'ring2';
+  | 'ring2'
+  | 'flask1'
+  | 'flask2'
+  | 'flask3'
+  | 'flask4'
+  | 'flask5';
 
 export const EQUIP_SLOTS: readonly EquipSlot[] = [
   'mainHand',
@@ -195,7 +202,15 @@ export const EQUIP_SLOTS: readonly EquipSlot[] = [
   'amulet',
   'ring1',
   'ring2',
+  'flask1',
+  'flask2',
+  'flask3',
+  'flask4',
+  'flask5',
 ];
+
+export const FLASK_SLOTS = ['flask1', 'flask2', 'flask3', 'flask4', 'flask5'] as const;
+export type FlaskSlot = (typeof FLASK_SLOTS)[number];
 
 export type WeaponClass =
   | 'mace'
@@ -222,7 +237,8 @@ export type BaseClass =
   | 'boots'
   | 'belt'
   | 'ring'
-  | 'amulet';
+  | 'amulet'
+  | 'flask';
 
 /** Defence profile of an armour piece: pure or hybrid. */
 export type DefenceType = 'ar' | 'ev' | 'es' | 'ar_ev' | 'ar_es' | 'ev_es';
@@ -235,10 +251,24 @@ export interface ModTemplate {
   readonly tags?: readonly string[];
 }
 
+export type FlaskKind = 'life' | 'mana' | 'granite' | 'swiftness' | 'warding' | 'cleansing';
+
+export interface FlaskStats {
+  readonly kind: FlaskKind;
+  /** Life/mana recovered over the duration, or the effect's strength for utility flasks. */
+  readonly amount: number;
+  readonly durationMs: number;
+  readonly maxCharges: number;
+  readonly chargesPerUse: number;
+}
+
 export interface BaseItemDef {
   readonly id: string;
   readonly class: BaseClass;
   readonly tier: number;
+  /** Character level needed to equip. */
+  readonly levelReq: number;
+  readonly flask?: FlaskStats;
   readonly twoHanded?: boolean;
   readonly weapon?: {
     readonly phys: readonly [number, number];
@@ -293,4 +323,47 @@ export interface UniqueDef {
   readonly baseId: string;
   /** Fixed affix-like lines; each rolls within its range. */
   readonly lines: readonly (AffixStatLine & { readonly range: readonly [number, number] })[];
+}
+
+// ---------------------------------------------------------------- Combat
+
+export type MonsterFamily = 'drowned' | 'wisp' | 'brute' | 'crawler';
+
+export interface MonsterDef {
+  readonly id: string;
+  readonly family: MonsterFamily;
+  readonly lifeMult: number;
+  readonly damageMult: number;
+  readonly attackIntervalMs: number;
+  /** Damage split by type (fractions summing to 1). */
+  readonly damageSplit: Partial<
+    Record<'physical' | 'fire' | 'cold' | 'lightning' | 'chaos', number>
+  >;
+  readonly evasionMult: number;
+  readonly armourMult: number;
+  readonly resists: Partial<Record<'fire' | 'cold' | 'lightning' | 'chaos', number>>;
+  /** Chance per kill to drop a tier-matched hide. */
+  readonly hideChance: number;
+}
+
+export interface MonsterModDef {
+  readonly id: string;
+  readonly lifeMult?: number;
+  readonly damageMult?: number;
+  readonly speedMult?: number;
+  readonly armourMult?: number;
+  readonly evasionMult?: number;
+  readonly resistAll?: number;
+  /** Extra fire damage as a fraction of the monster's damage. */
+  readonly extraFire?: number;
+  /** Fraction of damage dealt that the monster heals. */
+  readonly leech?: number;
+}
+
+export interface ZoneDef {
+  readonly id: string;
+  readonly act: number;
+  readonly index: number;
+  readonly level: number;
+  readonly monsters: readonly { readonly monsterId: string; readonly weight: number }[];
 }

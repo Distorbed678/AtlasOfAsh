@@ -34,6 +34,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   },
   // v2 → v3 (Phase 3): stash, equipment and item ids. Defaults are filled by normalizeState.
   2: (s) => ({ ...s, version: 3 }),
+  // v3 → v4 (Phase 4): character XP, combat, flask rules, loot filter. Defaults via normalizeState.
+  3: (s) => ({ ...s, version: 4 }),
 };
 
 export function migrate(

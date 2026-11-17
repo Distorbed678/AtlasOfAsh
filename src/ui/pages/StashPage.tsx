@@ -126,7 +126,7 @@ function StashActions({
 
   return (
     <div className="stack">
-      <ItemTooltip item={item} attributes={attrs} />
+      <ItemTooltip item={item} attributes={attrs} level={sheet.level} />
       <div className="panel">
         {slots.map((slot: EquipSlot) => {
           const problem = equipProblem(state, item, slot);

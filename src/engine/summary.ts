@@ -1,5 +1,6 @@
 import { SKILL_IDS } from './content';
 import type { SkillId } from './content/types';
+import { characterLevel } from './combat/progression';
 import { levelForXp } from './skills/xp';
 import type { GameState } from './state';
 
@@ -14,6 +15,11 @@ export interface ProgressSnapshot {
   itemsDiscarded: number;
   wagesPaid: number;
   thievingFails: number;
+  charXp: number;
+  kills: number;
+  deaths: number;
+  itemsLost: number;
+  gearCount: number;
 }
 
 export interface SkillGain {
@@ -33,6 +39,13 @@ export interface ProgressSummary {
   itemsDiscarded: number;
   wagesPaid: number;
   thievingFails: number;
+  charXp: number;
+  levelBefore: number;
+  levelAfter: number;
+  kills: number;
+  deaths: number;
+  itemsLost: number;
+  gearGained: number;
 }
 
 export function takeSnapshot(state: GameState): ProgressSnapshot {
@@ -49,6 +62,13 @@ export function takeSnapshot(state: GameState): ProgressSnapshot {
     itemsDiscarded: s.itemsDiscarded,
     wagesPaid: s.wagesPaid,
     thievingFails: s.thievingFails,
+    charXp: state.charXp,
+    kills: s.kills,
+    deaths: s.deaths,
+    itemsLost: s.itemsLost,
+    gearCount:
+      state.stash.tabs.reduce((n, t) => n + t.items.length, 0) +
+      (state.combat?.bag.gear.length ?? 0),
   };
 }
 
@@ -83,5 +103,12 @@ export function summarize(before: ProgressSnapshot, after: ProgressSnapshot): Pr
     itemsDiscarded: after.itemsDiscarded - before.itemsDiscarded,
     wagesPaid: after.wagesPaid - before.wagesPaid,
     thievingFails: after.thievingFails - before.thievingFails,
+    charXp: after.charXp - before.charXp,
+    levelBefore: characterLevel(before.charXp),
+    levelAfter: characterLevel(after.charXp),
+    kills: after.kills - before.kills,
+    deaths: after.deaths - before.deaths,
+    itemsLost: after.itemsLost - before.itemsLost,
+    gearGained: after.gearCount - before.gearCount,
   };
 }

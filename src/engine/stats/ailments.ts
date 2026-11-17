@@ -119,3 +119,43 @@ export function computeAilments(input: AilmentInput): AilmentResult[] {
 }
 
 const AILMENT_DOT = new Set<Ailment>(['ignite', 'bleed', 'poison']);
+
+/** Per-hit ailment scaling, precomputed once per fight (combat rolls per hit). */
+export interface AilmentFactors {
+  /** Flat added chance (0..1) and multiplier on chance, per ailment. */
+  chanceFlat: Record<Ailment, number>;
+  chanceMult: Record<Ailment, number>;
+  /** Multiplier on ailment damage/magnitude (ailment effect × DoT damage). */
+  effect: Record<Ailment, number>;
+}
+
+export function ailmentFactors(
+  mods: ModSet,
+  ctx: QueryContext,
+  skillTags: readonly string[],
+  skillChance: Partial<Record<'bleed' | 'poison', number>> = {},
+): AilmentFactors {
+  const chanceFlat = {} as Record<Ailment, number>;
+  const chanceMult = {} as Record<Ailment, number>;
+  const effect = {} as Record<Ailment, number>;
+  const types: Record<Ailment, DamageType[]> = {
+    ignite: ['fire'],
+    bleed: ['physical'],
+    poison: ['physical', 'chaos'],
+    shock: ['lightning'],
+    chill: ['cold'],
+    freeze: ['cold'],
+  };
+  for (const a of ['ignite', 'bleed', 'poison', 'shock', 'chill', 'freeze'] as Ailment[]) {
+    const q = { ...ctx, tags: [...skillTags, a] };
+    const b = mods.query(`ailmentChance.${a}`, 0, q);
+    const intrinsic = a === 'bleed' || a === 'poison' ? (skillChance[a] ?? 0) : 0;
+    chanceFlat[a] = (intrinsic + b.flatSum) / 100;
+    chanceMult[a] = (1 + b.incSum / 100) * b.moreMult;
+    const dot = AILMENT_DOT.has(a)
+      ? mods.query('dotDamage', 1, { ...ctx, tags: [...skillTags, 'dot', a, ...types[a]] }).total
+      : 1;
+    effect[a] = mods.query(`ailmentEffect.${a}`, 1, q).total * dot;
+  }
+  return { chanceFlat, chanceMult, effect };
+}

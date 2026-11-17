@@ -57,7 +57,11 @@ export type StatId =
   | 'leechCap'
   | 'esRechargeRate'
   | 'esRechargeStart'
-  | 'damageTaken';
+  | 'damageTaken'
+  | 'flaskRecovery'
+  | 'flaskMaxCharges'
+  | 'flaskChargesUsed'
+  | 'flaskDuration';
 
 /**
  * - flat: added to the base

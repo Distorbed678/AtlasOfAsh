@@ -1,5 +1,7 @@
 import { CONTENT, type Content } from './content';
-import type { EquipSlot, SkillId } from './content/types';
+import type { EquipSlot, FlaskSlot, SkillId } from './content/types';
+import { attemptRetreat, bankNow, startCombat, stopCombat } from './combat/combatSystem';
+import { FILTER_PRESETS } from './combat/loot';
 import { addGold, addItem, hasItems, isLocked, removeItem } from './economy/bank';
 import { buildingTier } from './economy/town';
 import { refundWorker, syncWorkerSlots, tryStartWorkerCycle } from './economy/workers';
@@ -23,7 +25,14 @@ import {
 import { ARCANE_DUST } from './content/materials';
 import { canPerform, cycleBlocker, skillLevel, startRunner } from './skills/actions';
 import { masteryLevel, poolCostForNextMastery } from './skills/mastery';
-import { rngFor, STASH_TAB_SIZE, type GameState } from './state';
+import {
+  rngFor,
+  STASH_TAB_SIZE,
+  type CombatSettings,
+  type FilterRule,
+  type FlaskRule,
+  type GameState,
+} from './state';
 
 /** Player intents. Applied at the current sim time, between events. */
 export type Command =
@@ -46,7 +55,15 @@ export type Command =
   | { type: 'unequip'; slot: EquipSlot }
   | { type: 'sellGear'; uids: number[] }
   | { type: 'disenchant'; uids: number[] }
-  | { type: 'enchant'; uid: number; op: EnchantOp; infusionId?: string };
+  | { type: 'enchant'; uid: number; op: EnchantOp; infusionId?: string }
+  | { type: 'startCombat'; zoneId: string }
+  | { type: 'stopCombat' }
+  | { type: 'bankLoot' }
+  | { type: 'retreat' }
+  | { type: 'setCombatSkill'; skill: CombatSettings['skill'] }
+  | { type: 'setFlaskRule'; slot: FlaskSlot; rule: FlaskRule }
+  | { type: 'setFilterRules'; rules: Omit<FilterRule, 'id'>[] }
+  | { type: 'applyFilterPreset'; preset: keyof typeof FILTER_PRESETS };
 
 export class CommandError extends Error {}
 
@@ -68,6 +85,7 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
       const blocker = cycleBlocker(state, def);
       if (blocker === 'materials') throw new CommandError('Missing materials');
       if (blocker === 'stash') throw new CommandError('Your stash is full');
+      stopCombat(state, content); // one action at a time
       state.action = startRunner(state, def, { kind: 'player' }, state.time, content);
       return;
     }
@@ -221,6 +239,7 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
         delete state.equipment[slot];
       }
       state.equipment[cmd.slot] = item;
+      state.gearVersion++;
       return;
     }
     case 'unequip': {
@@ -228,6 +247,7 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
       if (!item) return;
       if (!addToStash(state, item)) throw new CommandError('Your stash is full');
       delete state.equipment[cmd.slot];
+      state.gearVersion++;
       return;
     }
     case 'sellGear': {
@@ -279,6 +299,51 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
       }
       state.skills['skill.enchanting'].xp += spec.xp;
       state.lastEnchant = { uid: cmd.uid, op: cmd.op, outcome };
+      if (loc.where === 'equipment') state.gearVersion++;
+      return;
+    }
+
+    case 'startCombat': {
+      const zone = content.zones.get(cmd.zoneId);
+      if (state.dead) throw new CommandError('This character has died');
+      stopCombat(state, content);
+      state.action = null; // one action at a time
+      startCombat(state, zone.id, content);
+      return;
+    }
+    case 'stopCombat':
+      stopCombat(state, content);
+      return;
+    case 'bankLoot':
+      if (!state.combat) throw new CommandError('Not in combat');
+      bankNow(state, content);
+      return;
+    case 'retreat':
+      if (!state.combat) throw new CommandError('Not in combat');
+      try {
+        attemptRetreat(state, content);
+      } catch (e) {
+        throw new CommandError((e as Error).message);
+      }
+      return;
+    case 'setCombatSkill':
+      state.combatSettings.skill = cmd.skill;
+      return;
+    case 'setFlaskRule':
+      state.combatSettings.flaskRules[cmd.slot] = {
+        mode: cmd.rule.mode,
+        threshold: Math.max(0, Math.min(100, cmd.rule.threshold)),
+      };
+      return;
+    case 'setFilterRules':
+      state.lootFilter.rules = cmd.rules
+        .slice(0, 50)
+        .map((r) => ({ ...r, id: state.lootFilter.nextId++ }));
+      return;
+    case 'applyFilterPreset': {
+      const preset = FILTER_PRESETS[cmd.preset];
+      if (!preset) throw new CommandError('Unknown preset');
+      state.lootFilter.rules = preset.map((r) => ({ ...r, id: state.lootFilter.nextId++ }));
       return;
     }
   }

@@ -236,4 +236,24 @@ describe('GameHost simulation', () => {
     const bundle = (await h.ok({ type: 'debugBundle' })) as { save: string; seed: number };
     expect(decodeSave(bundle.save).seed).toBe(bundle.seed);
   });
+
+  it('a Mortal death deletes the save and leaves a memorial', async () => {
+    const h = makeHost();
+    await h.host.init();
+    const id = (await h.ok({
+      type: 'createCharacter',
+      character: { name: 'Doomed', classId: 'class.arcanist', mode: 'mortal' },
+    })) as string;
+    await h.ok({ type: 'selectCharacter', id });
+    await h.cmd({ type: 'startCombat', zoneId: 'zone.ember_gate' });
+    await h.host.handle({ type: 'devSkip', ms: 3_600_000 });
+    expect(h.host.state).toBeNull();
+    expect(await new SaveManager(h.store, id).load()).toBeUndefined();
+    const list = (await h.ok({ type: 'listCharacters' })) as {
+      id: string;
+      memorial?: { level: number };
+    }[];
+    expect(list.find((c) => c.id === id)?.memorial?.level).toBe(1);
+    expect(h.messages.some((m) => m.type === 'characterDied')).toBe(true);
+  });
 });

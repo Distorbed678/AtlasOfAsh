@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { CONTENT } from '../../engine/content';
 import { CHARACTER_MODES, type CharacterMode } from '../../engine/state';
 import { nameOf, t, tDynamic } from '../../i18n';
+import { formatDuration } from '../../shared/format';
 import { request, useGame } from '../bridge';
+import { navigate } from '../router';
 import { toast } from '../toasts';
 
 export function CharacterSelect() {
@@ -10,8 +12,10 @@ export function CharacterSelect() {
   const [creating, setCreating] = useState(characters.length === 0);
   const [importText, setImportText] = useState('');
 
-  const play = (id: string) =>
+  const play = (id: string) => {
+    navigate({ page: 'overview' });
     void request({ type: 'selectCharacter', id }).catch((e: Error) => toast(e.message, 'error'));
+  };
 
   return (
     <div className="select-screen">
@@ -22,38 +26,72 @@ export function CharacterSelect() {
         <div className="select-panel">
           <h2 className="section-title">{t('select.title')}</h2>
           <ul className="char-list">
-            {characters.map((c) => (
-              <li key={c.id} className="char-card">
-                <div className="char-info">
-                  <div className="char-name">{c.name}</div>
-                  <div className="dim small">
-                    {nameOf(c.classId)} · {t(`mode.${c.mode}`)} ·{' '}
-                    {t('select.totalLevel', { n: c.totalLevel })}
+            {characters
+              .filter((c) => !c.memorial)
+              .map((c) => (
+                <li key={c.id} className="char-card">
+                  <div className="char-info">
+                    <div className="char-name">{c.name}</div>
+                    <div className="dim small">
+                      {t('select.level', { n: c.level ?? 1 })} {nameOf(c.classId)} ·{' '}
+                      {t(`mode.${c.mode}`)}
+                      {c.fellInHardcore ? ` · ${t('select.fellInHardcore')}` : ''} ·{' '}
+                      {t('select.totalLevel', { n: c.totalLevel })}
+                    </div>
+                    <div className="faint small">
+                      {t('select.lastPlayed', { date: new Date(c.lastPlayed).toLocaleString() })}
+                    </div>
                   </div>
-                  <div className="faint small">
-                    {t('select.lastPlayed', { date: new Date(c.lastPlayed).toLocaleString() })}
+                  <div className="row">
+                    <button className="btn btn-primary" onClick={() => play(c.id)}>
+                      {t('select.play')}
+                    </button>
+                    <button
+                      className="btn btn-danger btn-small"
+                      onClick={() => {
+                        if (window.confirm(t('select.deleteConfirm', { name: c.name })))
+                          void request({ type: 'deleteCharacter', id: c.id });
+                      }}
+                    >
+                      {t('select.delete')}
+                    </button>
                   </div>
-                </div>
-                <div className="row">
-                  <button className="btn btn-primary" onClick={() => play(c.id)}>
-                    {t('select.play')}
-                  </button>
-                  <button
-                    className="btn btn-danger btn-small"
-                    onClick={() => {
-                      if (window.confirm(t('select.deleteConfirm', { name: c.name })))
-                        void request({ type: 'deleteCharacter', id: c.id });
-                    }}
-                  >
-                    {t('select.delete')}
-                  </button>
-                </div>
-              </li>
-            ))}
+                </li>
+              ))}
           </ul>
           <button className="btn btn-primary" onClick={() => setCreating(true)}>
             {t('select.new')}
           </button>
+          {characters.some((c) => c.memorial) && (
+            <div className="memorials">
+              <h3 className="sub-title">{t('select.memorial')}</h3>
+              <ul className="char-list">
+                {characters
+                  .filter((c) => c.memorial)
+                  .map((c) => (
+                    <li key={c.id} className="char-card memorial">
+                      <div className="char-info">
+                        <div className="char-name">{c.name}</div>
+                        <div className="dim small">
+                          {t('select.memorialLine', {
+                            level: c.memorial!.level,
+                            cls: nameOf(c.classId),
+                            cause: nameOf(c.memorial!.cause),
+                            time: formatDuration(c.memorial!.playedMs),
+                          })}
+                        </div>
+                      </div>
+                      <button
+                        className="btn btn-small"
+                        onClick={() => void request({ type: 'deleteCharacter', id: c.id })}
+                      >
+                        {t('select.delete')}
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
           <details className="import-box">
             <summary className="dim small">{t('select.import')}</summary>
             <textarea
@@ -99,6 +137,7 @@ function CreateCharacter({ onCancel }: { onCancel?: () => void }) {
         type: 'createCharacter',
         character: { name, classId, mode },
       });
+      navigate({ page: 'overview' });
       await request({ type: 'selectCharacter', id });
     } catch (e) {
       toast((e as Error).message, 'error');

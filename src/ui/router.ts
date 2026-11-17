@@ -13,7 +13,9 @@ export type Route =
   | { page: 'credits' }
   | { page: 'codex' }
   | { page: 'stash' }
-  | { page: 'equipment' };
+  | { page: 'equipment' }
+  | { page: 'combat' }
+  | { page: 'filter' };
 
 const SIMPLE = [
   'overview',
@@ -26,6 +28,8 @@ const SIMPLE = [
   'codex',
   'stash',
   'equipment',
+  'combat',
+  'filter',
 ] as const;
 
 /** `skill.mining` ↔ `#/skill/mining` */
@@ -68,4 +72,8 @@ export function href(route: Route): string {
 
 export function sameRoute(a: Route, b: Route): boolean {
   return href(a) === href(b);
+}
+
+export function navigate(route: Route): void {
+  window.location.hash = href(route);
 }

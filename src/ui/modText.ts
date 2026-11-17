@@ -92,6 +92,14 @@ function single(
       return t('mod.esRechargeStart.flat', { v: val });
     case 'penetration':
       return t('mod.penetration', { v: val, type: TYPE[a!]! });
+    case 'flaskRecovery':
+      return t('mod.flaskRecovery', { v: val });
+    case 'flaskMaxCharges':
+      return t('mod.flaskMaxCharges', { v: val });
+    case 'flaskChargesUsed':
+      return t('mod.flaskChargesUsed', { v: fmt(Math.abs(v)) });
+    case 'flaskDuration':
+      return t('mod.flaskDuration', { v: val });
     case 'gainAs':
       return t('mod.gainAs', { v: val, from: TYPE[a!]!, to: TYPE[b!]! });
     default:

@@ -10,6 +10,7 @@ import { equipProblem, sheetFor } from './equipment';
 import { eligibleAffixes, newItem, newUnique } from './generate';
 import { computeItem, itemLines } from './itemStats';
 import { stashFree } from './stash';
+import { characterXpForLevel } from '../combat/progression';
 import { AFFIX_LIMITS, type ItemInstance } from './types';
 
 const rng = () => new Rng(seedRng(5));
@@ -38,7 +39,8 @@ describe('content', () => {
   });
 
   it('every base can roll affixes; affix tiers are ordered by item level', () => {
-    for (const b of CONTENT.bases.all()) expect(eligibleAffixes(b).length, b.id).toBeGreaterThan(3);
+    for (const b of CONTENT.bases.all())
+      expect(eligibleAffixes(b).length, b.id).toBeGreaterThan(b.class === 'flask' ? 1 : 3);
     for (const a of CONTENT.affixes.all()) {
       for (let i = 1; i < a.tiers.length; i++)
         expect(a.tiers[i]!.ilvl).toBeGreaterThan(a.tiers[i - 1]!.ilvl);
@@ -187,6 +189,7 @@ describe('stash and equipment', () => {
 
   it('equips gear, checks attribute requirements, and swaps back to the stash', () => {
     const s = newState();
+    s.charXp = characterXpForLevel(20); // level requirement of tier-3 gear
     const plate = stashItem(s, newItem(1, 'base.body_ar_t1', 10, 'normal', rng()));
     const heavy = stashItem(s, newItem(2, 'base.body_ar_t3', 30, 'normal', rng())); // needs 32 Str
     applyCommand(s, { type: 'equip', uid: plate.uid, slot: 'body' });

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { characterLevel } from '../../engine/combat/progression';
 import { computeItem, equipmentMods, UNARMED } from '../../engine/items/itemStats';
 import { computeCharacter, type CharacterSheet } from '../../engine/stats/character';
 import { computeHit, type SkillStats, type TargetStats } from '../../engine/stats/damage';
@@ -121,6 +122,7 @@ function sections(sheet: CharacterSheet): { title: TKey; rows: Row[] }[] {
 export function CodexPage() {
   const character = useGameState((s) => s.character);
   const equipment = useGameState((s) => s.equipment);
+  const level = useGameState((s) => characterLevel(s.charXp));
   const devTools = useFlag('devTools');
   const benchMods = useBench((s) => s.mods);
   const benchOn = devTools && benchMods.length > 0;
@@ -128,13 +130,13 @@ export function CodexPage() {
     () =>
       computeCharacter({
         classId: character.classId,
-        level: 1,
+        level,
         mods: [
           ...equipmentMods(equipment, itemName),
           ...(benchOn ? benchModsToMods(benchMods) : []),
         ],
       }),
-    [character.classId, benchOn, benchMods, equipment],
+    [character.classId, benchOn, benchMods, equipment, level],
   );
   const [selected, setSelected] = useState<string>('life');
   const all = sections(sheet);
@@ -144,10 +146,11 @@ export function CodexPage() {
     <div className="page">
       <div className="page-head">
         <h1 className="page-title">{t('codex.title')}</h1>
-        <span className="tag">{nameOf(character.classId)} · L1</span>
+        <span className="tag">
+          {nameOf(character.classId)} · {t('topbar.level', { n: level })}
+        </span>
       </div>
       <p className="dim">{t('codex.intro')}</p>
-      <p className="faint small">{t('codex.levelNote')}</p>
       {benchOn && <div className="notice">{t('codex.benchActive')}</div>}
 
       <div className="codex-layout">

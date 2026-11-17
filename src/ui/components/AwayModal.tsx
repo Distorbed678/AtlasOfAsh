@@ -10,7 +10,7 @@ export function AwayModal() {
   const dismiss = useGame((s) => s.dismissAway);
   if (!away) return null;
   const { summary: s } = away;
-  const empty = s.skills.length === 0 && s.items.length === 0 && s.goldDelta === 0;
+  const empty = s.skills.length === 0 && s.items.length === 0 && s.goldDelta === 0 && s.kills === 0;
 
   return (
     <Modal
@@ -27,6 +27,32 @@ export function AwayModal() {
         <p className="dim">{t('away.nothing')}</p>
       ) : (
         <>
+          {(s.kills > 0 || s.deaths > 0) && (
+            <>
+              <h3 className="sub-title">{t('away.combat')}</h3>
+              <ul className="gain-list">
+                {s.kills > 0 && (
+                  <li>
+                    <span>{t('away.kills', { n: formatNumber(s.kills) })}</span>
+                    <span className="gain">
+                      {t('away.charXp', { n: formatNumber(Math.floor(s.charXp)) })}
+                    </span>
+                  </li>
+                )}
+                {s.levelAfter > s.levelBefore && (
+                  <li className="good small">
+                    <span>{t('away.charLevel', { from: s.levelBefore, to: s.levelAfter })}</span>
+                  </li>
+                )}
+                {s.gearGained > 0 && (
+                  <li className="small">
+                    <span>{t('away.gear', { n: s.gearGained })}</span>
+                  </li>
+                )}
+              </ul>
+              {s.deaths > 0 && <p className="bad small">{t('away.deaths', { n: s.deaths })}</p>}
+            </>
+          )}
           {s.skills.length > 0 && (
             <>
               <h3 className="sub-title">{t('away.skills')}</h3>
@@ -84,6 +110,9 @@ export function AwayModal() {
                 ))}
               </ul>
             </>
+          )}
+          {s.itemsLost > 0 && (
+            <p className="bad small">{t('away.itemsLost', { n: formatNumber(s.itemsLost) })}</p>
           )}
           {s.itemsDiscarded > 0 && (
             <p className="bad small">

@@ -2,8 +2,10 @@ import { create } from 'zustand';
 import type { Command } from '../engine/commands';
 import { SKILL_IDS } from '../engine/content';
 import { levelForXp } from '../engine/skills/xp';
+import { characterLevel } from '../engine/combat/progression';
 import { nameOf, t } from '../i18n';
 import type { GameState } from '../engine/state';
+import type { SimEvent } from '../engine/sim';
 import type { ProgressSummary } from '../engine/summary';
 import type { CharacterSummary, FromWorker, ToWorker, WorkerRequest } from '../worker/protocol';
 import { toast } from './toasts';
@@ -18,6 +20,8 @@ interface GameStore {
   workerError: string | null;
   /** Skills that just levelled up (drives a short sidebar flash). */
   levelFlash: Record<string, boolean>;
+  /** Recent combat events from the worker (live play only). */
+  log: SimEvent[];
   dismissAway(): void;
   dismissError(): void;
 }
@@ -30,6 +34,7 @@ export const useGame = create<GameStore>((set) => ({
   away: null,
   workerError: null,
   levelFlash: {},
+  log: [],
   dismissAway: () => set({ away: null }),
   dismissError: () => set({ workerError: null }),
 }));
@@ -50,7 +55,10 @@ function onMessage(msg: FromWorker): void {
       return;
     case 'snapshot':
       announceLevelUps(useGame.getState().state, msg.state);
-      useGame.setState({ state: msg.state });
+      useGame.setState({ state: msg.state, log: msg.log ?? [] });
+      return;
+    case 'characterDied':
+      toast(t('combat.deadMortal', { name: msg.name, cause: nameOf(msg.cause) }), 'error', 10_000);
       return;
     case 'characters':
       useGame.setState({ characters: msg.characters });
@@ -98,6 +106,11 @@ function announceLevelUps(prev: GameState | null, next: GameState | null): void 
     }
   }
   if (changed) useGame.setState({ levelFlash: flash });
+  const lvBefore = characterLevel(prev.charXp);
+  const lvAfter = characterLevel(next.charXp);
+  if (lvAfter > lvBefore) toast(t('combat.log.level', { n: lvAfter }), 'success');
+  if (next.stats.deaths > prev.stats.deaths)
+    toast(t('combat.dead', { name: next.character.name }), 'error', 8000);
 }
 
 export function startGame(): void {
