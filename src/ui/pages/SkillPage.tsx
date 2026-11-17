@@ -28,6 +28,7 @@ import { formatDuration, formatNumber, formatPercent } from '../../shared/format
 import { useState } from 'react';
 import { command, useGame, useGameState } from '../bridge';
 import { EnchantPanel } from '../components/EnchantPanel';
+import { GemcuttingPanel } from '../components/GemcuttingPanel';
 import { Icon } from '../components/Icon';
 import { ProgressBar } from '../components/ProgressBar';
 import { SkillXpBar } from '../components/SkillHeader';
@@ -59,9 +60,11 @@ export function SkillPage({ skillId }: { skillId: SkillId }) {
           </div>
         ))}
       </div>
-      <PoolPanel skillId={skillId} />
+      {skillId !== 'skill.gemcutting' && <PoolPanel skillId={skillId} />}
       {skillId === 'skill.enchanting' && <EnchantPanel />}
-      {skill.kind === 'artisan' ? (
+      {skillId === 'skill.gemcutting' ? (
+        <GemcuttingPanel />
+      ) : skill.kind === 'artisan' ? (
         <ArtisanBrowser skillId={skillId} />
       ) : (
         <div className="card-grid card-grid-wide">

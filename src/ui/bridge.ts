@@ -1,3 +1,4 @@
+import { gemLevel } from '../engine/gems/gems';
 import { create } from 'zustand';
 import type { Command } from '../engine/commands';
 import { SKILL_IDS } from '../engine/content';
@@ -109,6 +110,13 @@ function announceLevelUps(prev: GameState | null, next: GameState | null): void 
   const lvBefore = characterLevel(prev.charXp);
   const lvAfter = characterLevel(next.charXp);
   if (lvAfter > lvBefore) toast(t('combat.log.level', { n: lvAfter }), 'success');
+  const before = new Map(prev.gems.map((gem) => [gem.uid, gemLevel(gem.xp)]));
+  for (const gem of next.gems) {
+    const was = before.get(gem.uid);
+    const now = gemLevel(gem.xp);
+    if (was !== undefined && now > was)
+      toast(t('gems.levelUp', { name: nameOf(gem.gemId), n: now }), 'success');
+  }
   if (next.stats.deaths > prev.stats.deaths)
     toast(t('combat.dead', { name: next.character.name }), 'error', 8000);
 }

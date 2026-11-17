@@ -4,7 +4,7 @@ import { FLASK_SLOTS, type FlaskSlot } from '../../engine/content/types';
 import { combatContext } from '../../engine/combat/context';
 import { flaskFor } from '../../engine/combat/flasks';
 import { bagStacks } from '../../engine/combat/loot';
-import { predictZone, type ZonePrediction } from '../../engine/combat/predict';
+import { mainOffence, predictZone, type ZonePrediction } from '../../engine/combat/predict';
 import { characterLevel } from '../../engine/combat/progression';
 import { buildingValue } from '../../engine/economy/town';
 import type { SimEvent } from '../../engine/sim';
@@ -107,8 +107,18 @@ function Duel({ state }: { state: GameState }) {
   const ctx = combatContext(state, state.time);
   const m = c.monster;
   const mStats = ctx.monster;
-  const off = ctx.spell && c.mana >= ctx.spell.manaCost ? ctx.spell : ctx.attack;
+  const off = mainOffence(ctx);
   const playerProgress = 1 - (c.playerNextAt - state.time) / off.intervalMs;
+  const current = c.lastSkill ?? off.skillId;
+  const currentName =
+    current === 'basic_attack' || current === 'basic_spell'
+      ? t(`combat.skill.${current === 'basic_spell' ? 'spell' : 'attack'}`)
+      : nameOf(current);
+  const charges = (['endurance', 'frenzy', 'power'] as const).map((type) => ({
+    type,
+    n: c.charges[type].until > state.time ? c.charges[type].n : 0,
+  }));
+  const debuffs = m.debuffs.filter((d) => d.until > state.time);
   const monsterProgress = 1 - (m.nextAt - state.time) / mStats.attackIntervalMs;
   const stacks = bagStacks(c.bag);
   const autoBank = buildingValue(state, 'building.waystone');
@@ -134,10 +144,51 @@ function Duel({ state }: { state: GameState }) {
           <Bar label={t('combat.life')} value={c.life} max={ctx.maxLife} kind="life" />
           {ctx.maxEs > 0 && <Bar label={t('combat.es')} value={c.es} max={ctx.maxEs} kind="es" />}
           <Bar label={t('combat.mana')} value={c.mana} max={ctx.maxMana} kind="mana" />
-          <div className="small dim">
-            {t(`combat.skill.${off.skillId === 'basic_spell' ? 'spell' : 'attack'}`)}
-          </div>
+          <div className="small dim">{t('combat.current', { name: currentName })}</div>
           <ProgressBar value={playerProgress} label="attack" />
+          <div className="combat-status small">
+            <span className="dim">{t('combat.charges')}</span>
+            {charges.map(({ type, n }) => (
+              <span key={type} title={tDynamic(`charge.${type}`)}>
+                {[0, 1, 2].map((i) => (
+                  <span key={i} className={`charge-pip charge-${type}${i < n ? ' on' : ''}`} />
+                ))}
+              </span>
+            ))}
+            {c.combo.points > 0 && (
+              <span className="tag">{t('combat.combo', { n: c.combo.points })}</span>
+            )}
+            {c.guard && c.guard.until > state.time && (
+              <span className="tag">{t('combat.guard', { n: Math.round(c.guard.absorb) })}</span>
+            )}
+            {c.buffs
+              .filter((b) => b.until > state.time)
+              .map((b) => {
+                const gem = state.gems.find((g) => g.uid === b.gemUid);
+                return (
+                  <span key={b.gemUid} className="tag tag-good">
+                    {gem ? nameOf(gem.gemId) : ''}
+                  </span>
+                );
+              })}
+          </div>
+          {c.minions.length > 0 && (
+            <div className="minion-list small">
+              <span className="dim">{t('combat.minions')}</span>
+              {c.minions.map((mi) => {
+                const gem = state.gems.find((g) => g.uid === mi.gemUid);
+                return (
+                  <Bar
+                    key={mi.id}
+                    label={`${gem ? nameOf(gem.gemId) : ''}${mi.reviveAt !== undefined ? ` (${t('combat.minionDead')})` : ''}`}
+                    value={mi.reviveAt !== undefined ? 0 : mi.life}
+                    max={mi.maxLife}
+                    kind="life"
+                  />
+                );
+              })}
+            </div>
+          )}
           <div className="flask-row">
             {FLASK_SLOTS.map((slot) => {
               const item = state.equipment[slot];
@@ -177,6 +228,16 @@ function Duel({ state }: { state: GameState }) {
           <Bar label={t('combat.life')} value={m.life} max={m.maxLife} kind="enemy" />
           <ProgressBar value={monsterProgress} label="monster attack" />
           {ailments.length > 0 && <div className="small ailments">{ailments.join(' · ')}</div>}
+          {debuffs.length > 0 && (
+            <div className="small ailments">
+              {debuffs
+                .map((d) => {
+                  const gem = state.gems.find((g) => g.uid === d.gemUid);
+                  return gem ? nameOf(gem.gemId) : '';
+                })
+                .join(' · ')}
+            </div>
+          )}
           <div className="small dim">{t('combat.kills', { n: c.kills })}</div>
         </div>
       </div>
@@ -267,7 +328,9 @@ function toastRetreat() {
 
 function logClass(e: SimEvent): string {
   if (e.type === 'combatTaken' || e.type === 'death') return 'bad';
-  if (e.type === 'combatKill' || e.type === 'characterLevelUp') return 'good';
+  if (e.type === 'combatKill' || e.type === 'characterLevelUp' || e.type === 'gemLevelUp')
+    return 'good';
+  if (e.type === 'minionDied') return 'bad';
   if (e.type === 'combatHit' && e.crit) return 'crit';
   return '';
 }
@@ -296,6 +359,12 @@ function logText(e: SimEvent): string {
       return t('combat.log.banked');
     case 'death':
       return t('combat.log.death', { name: nameOf(e.killer) });
+    case 'skillTriggered':
+      return t('combat.log.trigger', { name: nameOf(e.gemId) });
+    case 'minionDied':
+      return t('combat.log.minionDied');
+    case 'gemLevelUp':
+      return t('combat.log.gemLevel', { name: nameOf(e.gemId), n: e.level });
     default:
       return '';
   }

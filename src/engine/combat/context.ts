@@ -100,7 +100,7 @@ export interface SkillContext {
   kind: SkillKind;
   level: number;
   usable: boolean;
-  unusableReason?: string;
+  unusableReason?: 'weapon';
   manaCost: number;
   cooldownMs: number;
   useTimeMs: number;
@@ -334,7 +334,7 @@ function skillContext(
     sheet.mods.query(stat, 1, { ...sheet.ctx, tags: tags ?? [...def.tags] }).total;
 
   let usable = true;
-  let unusableReason: string | undefined;
+  let unusableReason: 'weapon' | undefined;
   if (def.skillKind === 'attack' && def.weapons) {
     const cls = weapon ? content.bases.get(state.equipment.mainHand!.baseId).class : null;
     if (!cls || !def.weapons.includes(cls as never)) {
