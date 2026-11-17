@@ -27,7 +27,7 @@ const gemTier = (level: number) => Math.min(5, Math.floor((level - 1) / 20) + 1)
 /** Drop chances per loot roll (rarer monsters roll more often). */
 export const DROP_CHANCES = {
   gold: 0.7,
-  gear: 0.05,
+  gear: 0.025,
   dust: 0.08,
   spark: 0.02,
   ember: 0.01,

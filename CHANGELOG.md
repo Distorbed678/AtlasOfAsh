@@ -2,6 +2,12 @@
 
 All notable changes to Atlas of Ash. Shown in-game under "What's new".
 
+## [0.4.1] - 2026-11-16
+
+### Changed
+
+- Monsters drop half as much gear (about 10–12 pieces per hour early on).
+
 ## [0.4.0] - 2026-11-16
 
 ### Added

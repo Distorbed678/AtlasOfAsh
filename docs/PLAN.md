@@ -173,6 +173,7 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Flasks | **Equipment with charges** in 5 flask slots, crafted by **Alchemy**: life, mana and 4 utility flasks (Granite +armour, Swiftness +speed, Warding +resists, Cleansing ailment immunity). +1 charge per kill, +0.2 per hit taken. Per-slot auto-use rules. Flask affixes; Enchanting works on them |
 | Loot filter | **Full rule editor + 3 presets** (Keep everything, Early game, Rares only). Rules run before loot enters the bag |
 | Combat UI | Duel view (bars, attack progress, flask charges), combat log, trip bag with bank button, zone panel with predicted kills/h, XP/h, loot/h and death risk |
+| Post-launch tuning | **Gear drops halved** (2.5% per loot roll, ~10–12 pieces/hour early). Character level speed left fast until Phase 7 tunes all acts |
 
 ---
 
