@@ -73,3 +73,7 @@ export function href(route: Route): string {
 export function sameRoute(a: Route, b: Route): boolean {
   return href(a) === href(b);
 }
+
+export function navigate(route: Route): void {
+  window.location.hash = href(route);
+}

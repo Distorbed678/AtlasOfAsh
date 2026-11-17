@@ -4,7 +4,7 @@ import { CHARACTER_MODES, type CharacterMode } from '../../engine/state';
 import { nameOf, t, tDynamic } from '../../i18n';
 import { formatDuration } from '../../shared/format';
 import { request, useGame } from '../bridge';
-import { href } from '../router';
+import { navigate } from '../router';
 import { toast } from '../toasts';
 
 export function CharacterSelect() {
@@ -13,7 +13,7 @@ export function CharacterSelect() {
   const [importText, setImportText] = useState('');
 
   const play = (id: string) => {
-    window.location.hash = href({ page: 'overview' });
+    navigate({ page: 'overview' });
     void request({ type: 'selectCharacter', id }).catch((e: Error) => toast(e.message, 'error'));
   };
 
@@ -137,7 +137,7 @@ function CreateCharacter({ onCancel }: { onCancel?: () => void }) {
         type: 'createCharacter',
         character: { name, classId, mode },
       });
-      window.location.hash = href({ page: 'overview' });
+      navigate({ page: 'overview' });
       await request({ type: 'selectCharacter', id });
     } catch (e) {
       toast((e as Error).message, 'error');
