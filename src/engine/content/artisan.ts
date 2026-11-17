@@ -32,6 +32,7 @@ export const ARTISAN_SKILLS: SkillDef[] = (
     'skill.tailoring',
     'skill.jewelcrafting',
     'skill.enchanting',
+    'skill.gemcutting',
   ] as SkillId[]
 ).map((id) => ({ id, kind: 'artisan', rareFinds: [] }));
 

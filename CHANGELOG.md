@@ -2,6 +2,25 @@
 
 All notable changes to Atlas of Ash. Shown in-game under "What's new".
 
+## [0.5.0] - 2026-11-16
+
+### Added
+
+- Gems! 117 of them: 60 skill gems (36 weapon attacks, 12 spells, 6 minion skills, 3 curses, 2 warcries and a guard), 45 support gems and 12 spirit gems, in five tiers.
+- Gemcutting, a new skill: cut uncut gems into any gem of the same kind, of the stone's tier or lower. Polish gems up to 20% quality and open up to five support sockets. Higher tiers need a higher Gemcutting level.
+- Gems page: a skill bar with up to five slots (unlocking at character levels 1, 4, 12, 24 and 38). Each action, the first skill whose rule passes is used. Rules include "life below %", "enemy lacks its debuff" and "combo points at least".
+- Support gems: socket them into skills to add damage, conversion, ailments, extra hits, charges, triggers and more. Each support can be used once per character.
+- Spirit: +30 at character levels 10, 30 and 50, plus sceptres. Spirit gems (auras) and permanent minions reserve it.
+- Endurance, frenzy and power charges (up to 3 each, 10 seconds), combo builders and finishers, curses, warcries, guards, and spells that trigger on critical hits or when you are hit.
+- Minions: permanent ones that revive after 6 seconds, and summoned ones that last a few seconds. Monsters pick their target by threat.
+- Gems in use level up to 20 as you kill monsters.
+- Spirit gems now drop as uncut stones too.
+- The combat screen shows the skill in use, charges, combo points, guard, buffs, curses and minions. Zone predictions account for your skill bar and minions.
+
+### Changed
+
+- Mana regenerates at 5% of maximum per second (was 2%), so skills can be sustained.
+
 ## [0.4.1] - 2026-11-16
 
 ### Changed

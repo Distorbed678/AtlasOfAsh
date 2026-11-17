@@ -34,6 +34,7 @@ export const DROP_CHANCES = {
   kindled: 0.003,
   uncutSkill: 0.008,
   uncutSupport: 0.006,
+  uncutSpirit: 0.003,
 } as const;
 
 let basesByTier: Map<
@@ -121,6 +122,8 @@ export function rollDrops(
       drops.push({ kind: 'item', itemId: `item.uncut_skill_gem_t${gemTier(L)}`, qty: 1 });
     if (rng.chance(DROP_CHANCES.uncutSupport))
       drops.push({ kind: 'item', itemId: `item.uncut_support_gem_t${gemTier(L)}`, qty: 1 });
+    if (rng.chance(DROP_CHANCES.uncutSpirit))
+      drops.push({ kind: 'item', itemId: `item.uncut_spirit_gem_t${gemTier(L)}`, qty: 1 });
   }
   if (monster.def.hideChance > 0 && rng.chance(monster.def.hideChance))
     drops.push({ kind: 'item', itemId: HIDE_IDS[zoneTier(L) - 1]!, qty: 1 });

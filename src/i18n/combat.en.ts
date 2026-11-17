@@ -35,10 +35,13 @@ const gems: Record<string, string> = {};
 for (let t = 1; t <= 5; t++) {
   gems[`item.uncut_skill_gem_t${t}`] = `Uncut Skill Gem (Tier ${t})`;
   gems[`item.uncut_skill_gem_t${t}.desc`] =
-    'A raw gem humming with a skill waiting to be shaped. Gemcutting can cut it (coming soon).';
+    'A raw gem humming with a skill waiting to be shaped. Cut it at the Gemcutting bench into any skill gem of its tier.';
   gems[`item.uncut_support_gem_t${t}`] = `Uncut Support Gem (Tier ${t})`;
   gems[`item.uncut_support_gem_t${t}.desc`] =
-    'A raw gem that wants to strengthen another. Gemcutting can cut it (coming soon).';
+    'A raw gem that wants to strengthen another. Cut it at the Gemcutting bench into any support gem of its tier.';
+  gems[`item.uncut_spirit_gem_t${t}`] = `Uncut Spirit Gem (Tier ${t})`;
+  gems[`item.uncut_spirit_gem_t${t}.desc`] =
+    'A raw gem with a steady inner glow. Cut it at the Gemcutting bench into any spirit gem of its tier.';
 }
 
 export const combatEn: Record<string, string> = {

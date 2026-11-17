@@ -57,6 +57,7 @@ export type SkillId =
   | 'skill.tailoring'
   | 'skill.jewelcrafting'
   | 'skill.enchanting'
+  | 'skill.gemcutting'
   | 'skill.alchemy';
 
 export interface RareFind {
@@ -367,3 +368,126 @@ export interface ZoneDef {
   readonly level: number;
   readonly monsters: readonly { readonly monsterId: string; readonly weight: number }[];
 }
+
+// ---------------------------------------------------------------- Gems
+
+export type GemKind = 'skill' | 'support' | 'spirit';
+export type SkillKind = 'attack' | 'spell' | 'minion' | 'curse' | 'warcry' | 'guard';
+export type ChargeType = 'endurance' | 'frenzy' | 'power';
+
+/** A value that grows with gem level: base + perLevel × (level − 1). */
+export interface Scaling {
+  readonly base: number;
+  readonly perLevel: number;
+}
+
+export interface GemModTemplate {
+  readonly stat: StatId;
+  readonly kind: Mod['kind'];
+  readonly value: Scaling;
+  readonly tags?: readonly string[];
+  readonly condition?: string;
+}
+
+export interface ChargeGain {
+  readonly type: ChargeType;
+  readonly chance: number;
+  readonly on: 'hit' | 'kill' | 'crit' | 'use';
+  readonly count?: number;
+}
+
+export interface MinionSpec {
+  readonly persistent: boolean;
+  readonly count: number;
+  /** Persistent minions reserve Spirit. */
+  readonly spirit?: number;
+  /** Summoned minions last this long. */
+  readonly durationMs?: number;
+  readonly life: Scaling;
+  readonly damage: Scaling;
+  readonly attackIntervalMs: number;
+  readonly damageType: 'physical' | 'fire' | 'cold' | 'lightning' | 'chaos';
+  readonly threat: number;
+}
+
+export interface DebuffSpec {
+  readonly durationMs: number;
+  readonly resistDown?: Scaling;
+  readonly damageTaken?: Scaling;
+  readonly slow?: Scaling;
+  readonly armourBreak?: Scaling;
+}
+
+export interface SkillGemDef {
+  readonly id: string;
+  readonly kind: 'skill';
+  readonly tier: number;
+  readonly skillKind: SkillKind;
+  /** Used for support compatibility and damage modifiers (e.g. 'attack', 'melee', 'fire'). */
+  readonly tags: readonly string[];
+  /** Attacks only: weapon classes the skill works with. */
+  readonly weapons?: readonly WeaponClass[];
+  /** Attacks: fraction of weapon damage. */
+  readonly effectiveness?: Scaling;
+  /** Spells: damage at level 1, grown by `damageGrowth` per level. */
+  readonly baseDamage?: Partial<
+    Record<'physical' | 'fire' | 'cold' | 'lightning' | 'chaos', readonly [number, number]>
+  >;
+  readonly damageGrowth?: number;
+  readonly castTimeMs?: number;
+  readonly critChance?: number;
+  readonly conversion?: Readonly<Record<string, number>>;
+  readonly ailmentChance?: { readonly bleed?: number; readonly poison?: number };
+  readonly manaCost: Scaling;
+  readonly cooldownMs?: number;
+  /** Extra hits per use, each dealing `fraction` of the damage. */
+  readonly repeats?: { readonly count: number; readonly fraction: number };
+  readonly combo?: 'builder' | 'finisher';
+  readonly chargeGain?: ChargeGain;
+  /** Consumes all charges of this type for +10% more damage each. */
+  readonly chargeFinisher?: ChargeType;
+  /** Fraction of the monster's armour ignored. */
+  readonly armourPen?: number;
+  readonly mods?: readonly GemModTemplate[];
+  readonly debuff?: DebuffSpec;
+  readonly buff?: {
+    readonly durationMs: number;
+    readonly mods: readonly GemModTemplate[];
+    readonly charges?: { readonly type: ChargeType; readonly count: number };
+  };
+  readonly guard?: { readonly absorb: Scaling; readonly durationMs: number };
+  readonly minion?: MinionSpec;
+  /** Applied per 1% quality (value.base per quality point). */
+  readonly quality: GemModTemplate;
+}
+
+export interface SupportFlags {
+  readonly repeat?: { readonly count: number; readonly fraction: number };
+  readonly chargeGain?: ChargeGain;
+  readonly trigger?: { readonly on: 'crit' | 'hit'; readonly cooldownMs: number };
+  readonly comboBuilder?: boolean;
+  readonly execute?: { readonly belowLifePct: number; readonly more: Scaling };
+}
+
+export interface SupportGemDef {
+  readonly id: string;
+  readonly kind: 'support';
+  readonly tier: number;
+  /** The skill must have at least one of these tags (or skill kinds). */
+  readonly requiresAny: readonly string[];
+  readonly mods: readonly GemModTemplate[];
+  readonly manaMult: number;
+  readonly flags?: SupportFlags;
+  readonly quality: GemModTemplate;
+}
+
+export interface SpiritGemDef {
+  readonly id: string;
+  readonly kind: 'spirit';
+  readonly tier: number;
+  readonly spirit: number;
+  readonly mods: readonly GemModTemplate[];
+  readonly quality: GemModTemplate;
+}
+
+export type GemDef = SkillGemDef | SupportGemDef | SpiritGemDef;

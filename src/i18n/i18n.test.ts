@@ -22,6 +22,7 @@ describe('i18n', () => {
       ...CONTENT.monsters.all(),
       ...CONTENT.monsterMods.all(),
       ...CONTENT.bases.all(),
+      ...CONTENT.gems.all(),
     ];
     for (const c of all) expect(hasTranslation(c.id), c.id).toBe(true);
     for (const i of CONTENT.items.all())

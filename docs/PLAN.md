@@ -127,7 +127,7 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Resistances | 75% cap (mods can raise to 90%). Each act boss permanently lowers resists by 10% (−60% after Act 6). Chaos starts at 0% |
 | Block | 50% cap (keystones up to 75%) |
 | Energy shield | Recharge after **4s** without damage, at **12.5%/s** of max ES. Chaos damage does not bypass ES |
-| Regen | Mana 2%/s of max; life **1%/s** of max |
+| Regen | Mana **5%/s** of max (raised from 2% in Phase 5 so skills can be sustained); life **1%/s** of max |
 | Leech | Recovers over 1s; total leech capped at 20% of max life per second (raisable) |
 | Ailments | **Threshold-based** (PoE2): ignite, shock, chill and freeze happen innately, scaled by hit damage vs the enemy's ailment threshold (≈ its max life). **Bleed and poison need chance mods**; their strength scales with the hit |
 | Ailment numbers | Ignite 20%/s of the fire hit for 4s (strongest only) · Bleed 15%/s of the physical hit for 5s (strongest only) · Poison 20%/s of physical + chaos for 2s (stacks) · Shock: target takes 20% more damage for 4s · Chill: up to 30% slow for 2s · Freeze: cold builds up; at 100% of threshold → frozen 3s. Only ailment/DoT-specific modifiers scale ailments (no double-dipping from "increased fire damage") |
@@ -169,11 +169,28 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Retreat | Manual **"Attempt to retreat"** button: success chance = current life %. Success stops combat and banks the bag; failure → 15s cooldown |
 | Trip bag | 100 stacks (gear counts individually). When full, new drops are lost. A manual **"Bank loot"** button banks instantly but **restarts both attack timers**. Stopping combat banks |
 | Waystone | **Not available by default**: a Town building whose first tier auto-banks every **60 minutes**, shortened by later tiers |
-| Drops | Gold, gear (zone tier; item level = monster level), tier-matched hides, Enchanting reagents and Arcane Dust, and **uncut gems** (stockpiled for Phase 5) |
+| Drops | Gold, gear (zone tier; item level = monster level), tier-matched hides, Enchanting reagents and Arcane Dust, and **uncut gems** (cut by Gemcutting since Phase 5) |
 | Flasks | **Equipment with charges** in 5 flask slots, crafted by **Alchemy**: life, mana and 4 utility flasks (Granite +armour, Swiftness +speed, Warding +resists, Cleansing ailment immunity). +1 charge per kill, +0.2 per hit taken. Per-slot auto-use rules. Flask affixes; Enchanting works on them |
 | Loot filter | **Full rule editor + 3 presets** (Keep everything, Early game, Rares only). Rules run before loot enters the bag |
 | Combat UI | Duel view (bars, attack progress, flask charges), combat log, trip bag with bank button, zone panel with predicted kills/h, XP/h, loot/h and death risk |
 | Post-launch tuning | **Gear drops halved** (2.5% per loot roll, ~10–12 pieces/hour early). Character level speed left fast until Phase 7 tunes all acts |
+
+### 1.12 Phase 5 decisions (gems, skills, rotation)
+| Area | Decision |
+|---|---|
+| Gem roster | **Large first set: ~60 skill gems, ~45 support gems, ~12 spirit gems.** All names original |
+| Cutting | Uncut gems become **any gem of their tier or lower, player's choice** (PoE2-style) |
+| Gem levels | Equipped skill gems **and their supports level from combat XP** (PoE1-style). **Every gem caps at level 20**; tiers decide which gems exist |
+| Support slots | Gems start with 2; **Gemcutting opens the 3rd/4th/5th slot at any gem level** (expensive) |
+| Gemcutting | **Instant operations** (like Enchanting) that grant XP: cut, polish quality, open a slot. Gemcutting level gates which tiers you can cut |
+| Quality | Up to 20%, a **per-gem bonus** (e.g. +ignite chance on fire spells), raised by Gemcutting with gem fragments |
+| Skill slots | **5 priority-list slots**, unlocked at character levels 1 / 4 / 12 / 24 / 38. Each slot holds a skill gem (with supports) and a use rule |
+| Mana | Every skill costs mana per use, scaling with gem level; supports multiply cost. Out of mana → next usable skill, falling back to Basic Attack |
+| Spirit | +30 at character levels 10, 30 and 50 (stand-ins until act bosses in Phase 7), plus gear (sceptres, Spirit affixes) and later the tree. Zealots start with 30 |
+| Charges | Endurance / frenzy / power, **max 3 each, 10s**, refreshed when gained. Endurance +4% physical damage reduction and +4% elemental resists each; frenzy +4% speed and +4% more damage each; power +40% increased crit chance each |
+| Combos | Fast skills build combo points (max 8, decay 4s after the last hit); **finishers consume all for +25% more damage per point** |
+| Minions | **Persistent** (reserve Spirit, revive 6s after dying) and **summoned** (mana, timed). Own life and damage, scaled by gem level and minion supports; monsters target by **threat** |
+| Skill types | Attacks (need matching **weapon types**), spells (any weapon), minions, **curses**, **warcries/buffs**, **triggered skills** (cast on crit / when hit) and **guard skills** |
 
 ---
 
@@ -325,7 +342,7 @@ Each phase runs on its own branch (`phase-N-name`), with one commit per feature,
 | 2 | **Stat engine** ✅ | Modifiers, tags, damage/defence pipeline, entropy evasion, provenance; golden tests; first **Codex** panel |
 | 3 | **Items and artisan skills** ✅ | Bases, affixes, rarities, uniques framework, tooltips, equipment; Smithing, Tailoring, Woodworking, Jewelcrafting; **Enchanting**; Ashen Brand |
 | 4 | **Combat** ✅ | 1v1 event sim, monsters + mods, zones, trip bag + Waystone, **loot filter**, death penalty, flasks + **Alchemy**, offline combat |
-| 5 | **Gems and rotation** | Uncut drops, **Gemcutting**, skill/support/spirit gems, once-per-character supports, priority list, Spirit, charges, combos, minions + threat |
+| 5 | **Gems and rotation** ✅ | Uncut drops, **Gemcutting**, skill/support/spirit gems, once-per-character supports, priority list, Spirit, charges, combos, minions + threat |
 | 6 | **Passive tree** | Tree format + editor, renderer, 6 class starts, attribute choices, notables, choice notables, keystones, jewels, cluster + timeless jewels, **Runecraft**, respec, **build codes** |
 | 7 | **Campaign** | Acts, zones, boss scripts, act dungeons, 4 ascendancy trials, **24 ascendancies**, bounties |
 | 8 | **Utility skills and Town** | Farming, Cooking, Agility, Astrology; full Town; **action queue**; notifications |
@@ -343,3 +360,4 @@ Each phase runs on its own branch (`phase-N-name`), with one commit per feature,
 3. Exact Town costs and wage numbers (tuned during Phases 1 and 8).
 4. **Phase 4:** a level-1 character has only ~56 accuracy (6 × level + 5 × 10 Dex). Decide early monsters' evasion, or a higher starting accuracy, so early hit chance feels right.
 5. **Phase 4:** monster hides unlock leather tiers 2–10 (evasion armour, leather hybrids and belts above tier 1).
+6. **Phase 5 balance (for Phase 7):** Gemcutting levels only from cutting, polishing and sockets (a cut gives 60 × tier XP), so tier 2 cutting (level 20) takes roughly 75 cuts. Summoned minions (Spectral Wolves, Ember Sprites) out-damage tier 1 attacks. Basic Spell with a wand, staff or sceptre is about twice a mace's Basic Attack, so some weapon attacks on spell weapons trail it.

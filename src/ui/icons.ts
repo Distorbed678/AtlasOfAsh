@@ -12,6 +12,7 @@ export const SKILL_ICONS: Record<SkillId, string> = {
   'skill.tailoring': 'skill.tailoring',
   'skill.jewelcrafting': 'skill.jewelcrafting',
   'skill.enchanting': 'skill.enchanting',
+  'skill.gemcutting': 'skill.gemcutting',
   'skill.alchemy': 'skill.alchemy',
 };
 

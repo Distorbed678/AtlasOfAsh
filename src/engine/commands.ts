@@ -2,6 +2,7 @@ import { CONTENT, type Content } from './content';
 import type { EquipSlot, FlaskSlot, SkillId } from './content/types';
 import { attemptRetreat, bankNow, startCombat, stopCombat } from './combat/combatSystem';
 import { FILTER_PRESETS } from './combat/loot';
+import * as gc from './gems/gemcutting';
 import { addGold, addItem, hasItems, isLocked, removeItem } from './economy/bank';
 import { buildingTier } from './economy/town';
 import { refundWorker, syncWorkerSlots, tryStartWorkerCycle } from './economy/workers';
@@ -32,6 +33,7 @@ import {
   type FilterRule,
   type FlaskRule,
   type GameState,
+  type SkillRule,
 } from './state';
 
 /** Player intents. Applied at the current sim time, between events. */
@@ -63,7 +65,16 @@ export type Command =
   | { type: 'setCombatSkill'; skill: CombatSettings['skill'] }
   | { type: 'setFlaskRule'; slot: FlaskSlot; rule: FlaskRule }
   | { type: 'setFilterRules'; rules: Omit<FilterRule, 'id'>[] }
-  | { type: 'applyFilterPreset'; preset: keyof typeof FILTER_PRESETS };
+  | { type: 'applyFilterPreset'; preset: keyof typeof FILTER_PRESETS }
+  | { type: 'cutGem'; itemId: string; gemId: string }
+  | { type: 'polishGem'; uid: number }
+  | { type: 'openGemSocket'; uid: number }
+  | { type: 'socketSupport'; skillUid: number; index: number; supportUid: number | null }
+  | { type: 'setSkillSlot'; slot: number; gemUid: number | null }
+  | { type: 'swapSkillSlots'; a: number; b: number }
+  | { type: 'setSkillRule'; slot: number; rule: SkillRule }
+  | { type: 'toggleSpirit'; uid: number; active: boolean }
+  | { type: 'destroyGem'; uid: number };
 
 export class CommandError extends Error {}
 
@@ -77,6 +88,15 @@ function cleanName(name: string): string {
 }
 
 export function applyCommand(state: GameState, cmd: Command, content: Content = CONTENT): void {
+  try {
+    applyInner(state, cmd, content);
+  } catch (e) {
+    if (e instanceof gc.GemError) throw new CommandError(e.message);
+    throw e;
+  }
+}
+
+function applyInner(state: GameState, cmd: Command, content: Content): void {
   switch (cmd.type) {
     case 'startAction': {
       const def = content.actions.get(cmd.actionId);
@@ -346,5 +366,32 @@ export function applyCommand(state: GameState, cmd: Command, content: Content = 
       state.lootFilter.rules = preset.map((r) => ({ ...r, id: state.lootFilter.nextId++ }));
       return;
     }
+    case 'cutGem':
+      gc.cutGem(state, cmd.itemId, cmd.gemId, content);
+      return;
+    case 'polishGem':
+      gc.polishGem(state, cmd.uid);
+      return;
+    case 'openGemSocket':
+      gc.openSocket(state, cmd.uid, content);
+      return;
+    case 'socketSupport':
+      gc.socketSupport(state, cmd.skillUid, cmd.index, cmd.supportUid, content);
+      return;
+    case 'setSkillSlot':
+      gc.setSkillSlot(state, cmd.slot, cmd.gemUid, content);
+      return;
+    case 'swapSkillSlots':
+      gc.swapSkillSlots(state, cmd.a, cmd.b);
+      return;
+    case 'setSkillRule':
+      gc.setSkillRule(state, cmd.slot, cmd.rule);
+      return;
+    case 'toggleSpirit':
+      gc.toggleSpirit(state, cmd.uid, cmd.active, content);
+      return;
+    case 'destroyGem':
+      gc.destroyGem(state, cmd.uid);
+      return;
   }
 }

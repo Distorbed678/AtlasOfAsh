@@ -107,6 +107,16 @@ function single(
   }
 }
 
+/** One modifier as display text (used for gem effects). */
+export function modLine(
+  stat: StatId,
+  kind: string,
+  v: number,
+  tags: readonly string[] = [],
+): string {
+  return single(stat, kind, v, tags);
+}
+
 /** Turn item lines into display text, merging min/max pairs and identical penetration lines. */
 export function displayLines(lines: ItemLine[]): DisplayLine[] {
   const out: DisplayLine[] = [];

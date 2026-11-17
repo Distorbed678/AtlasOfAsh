@@ -20,7 +20,12 @@ export type SimEvent =
   | { type: 'characterLevelUp'; level: number; time: number }
   | { type: 'flaskUsed'; slot: string; kind: string; time: number }
   | { type: 'autoBanked'; time: number }
-  | { type: 'death'; killer: string; time: number };
+  | { type: 'death'; killer: string; time: number }
+  | { type: 'skillUsed'; gemId: string; time: number }
+  | { type: 'skillTriggered'; gemId: string; time: number }
+  | { type: 'minionHit'; damage: number; time: number }
+  | { type: 'minionDied'; time: number }
+  | { type: 'gemLevelUp'; gemId: string; level: number; time: number };
 
 export interface SimContext {
   readonly content: Content;

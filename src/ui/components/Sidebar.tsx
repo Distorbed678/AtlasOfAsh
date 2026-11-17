@@ -50,6 +50,7 @@ export function Sidebar({ route, open, onNavigate }: Props) {
         <div className="nav-group-title">{t('nav.group.general')}</div>
         {link({ page: 'overview' }, t('nav.overview'), 'nav.overview')}
         {link({ page: 'combat' }, t('nav.combat'), 'nav.combat')}
+        {link({ page: 'gems' }, t('nav.gems'), 'nav.gems')}
         {link({ page: 'filter' }, t('nav.filter'), 'nav.filter')}
         {link(
           { page: 'bank' },

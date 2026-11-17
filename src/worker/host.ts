@@ -268,7 +268,15 @@ export class GameHost {
   private recordEvent(e: SimEvent): void {
     if (
       !e.type.startsWith('combat') &&
-      !['death', 'flaskUsed', 'characterLevelUp', 'autoBanked'].includes(e.type)
+      ![
+        'death',
+        'flaskUsed',
+        'characterLevelUp',
+        'autoBanked',
+        'skillTriggered',
+        'minionDied',
+        'gemLevelUp',
+      ].includes(e.type)
     )
       return;
     this.log.push(e);

@@ -61,7 +61,15 @@ export type StatId =
   | 'flaskRecovery'
   | 'flaskMaxCharges'
   | 'flaskChargesUsed'
-  | 'flaskDuration';
+  | 'flaskDuration'
+  | 'curseEffect'
+  | 'buffEffect'
+  | 'guardEffect'
+  | 'minionLife'
+  | 'minionAttackSpeed'
+  | 'minionThreat'
+  | 'cooldownRecovery'
+  | 'manaCost';
 
 /**
  * - flat: added to the base

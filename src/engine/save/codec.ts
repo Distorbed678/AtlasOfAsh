@@ -66,6 +66,9 @@ function normalizeState(raw: RawSave): GameState {
   raw.combatSettings ??= fresh.combatSettings;
   raw.lootFilter ??= fresh.lootFilter;
   raw.gearVersion ??= 0;
+  raw.gems ??= [];
+  raw.skillBar ??= fresh.skillBar;
+  raw.activeSpirit ??= [];
   return raw as GameState;
 }
 
