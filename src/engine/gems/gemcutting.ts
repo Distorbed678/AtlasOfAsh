@@ -41,7 +41,7 @@ function pay(state: GameState, cost: Record<string, number>) {
   for (const [id, qty] of Object.entries(cost)) removeItem(state, id, qty);
 }
 
-/** Cut an uncut gem into any gem of the same kind and tier. Returns the new gem's uid. */
+/** Cut an uncut gem into any gem of the same kind, of its tier or lower. Returns the new gem's uid. */
 export function cutGem(
   state: GameState,
   itemId: string,
@@ -52,9 +52,9 @@ export function cutGem(
   if (!kind) throw new GemError('Not an uncut gem');
   const tier = uncutTier(itemId);
   const def = content.gems.get(gemId);
-  if (def.kind !== kind || def.tier !== tier)
+  if (def.kind !== kind || def.tier > tier)
     throw new GemError('That gem cannot be cut from this stone');
-  const need = CUT_LEVEL[tier - 1] ?? 99;
+  const need = CUT_LEVEL[def.tier - 1] ?? 99;
   if (skillLevel(state, GEMCUTTING) < need) throw new GemError(`Requires Gemcutting level ${need}`);
   pay(state, { [itemId]: 1 });
   const uid = state.nextItemUid++;
@@ -109,11 +109,17 @@ export function socketSupport(
     const sdef = gemDef(sup, content);
     if (!isSupport(sdef)) throw new GemError('Not a support gem');
     if (!supportFits(def, sdef)) throw new GemError('That support cannot support this skill');
-    const dup = g.supports.some(
-      (s, i) =>
-        i !== index && s !== null && s !== supportUid && findGem(state, s)?.gemId === sup.gemId,
+    // Each support gem may be used once per character, across all skills.
+    const dup = state.gems.some((other) =>
+      other.supports.some(
+        (s, i) =>
+          !(other.uid === g.uid && i === index) &&
+          s !== null &&
+          s !== supportUid &&
+          findGem(state, s)?.gemId === sup.gemId,
+      ),
     );
-    if (dup) throw new GemError('This skill already has that support');
+    if (dup) throw new GemError('That support is already used by one of your skills');
     for (const other of state.gems)
       other.supports = other.supports.map((s) => (s === supportUid ? null : s));
   }

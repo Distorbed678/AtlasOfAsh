@@ -119,6 +119,13 @@ describe('gemcutting', () => {
     ).toThrow(CommandError); // support
   });
 
+  it('a stone can be cut into a lower-tier gem', () => {
+    const s = char();
+    addItem(s, 'item.uncut_skill_gem_t2', 1);
+    applyCommand(s, { type: 'cutGem', itemId: 'item.uncut_skill_gem_t2', gemId: 'gem.hew' });
+    expect(s.gems[0]!.gemId).toBe('gem.hew');
+  });
+
   it('higher tiers need Gemcutting level', () => {
     const s = char();
     addItem(s, 'item.uncut_skill_gem_t2', 1);
@@ -157,10 +164,14 @@ describe('gemcutting', () => {
     applyCommand(s, { type: 'socketSupport', skillUid: a, index: 0, supportUid: sup });
     expect(() =>
       applyCommand(s, { type: 'socketSupport', skillUid: a, index: 1, supportUid: sup2 }),
-    ).toThrow(/already has/);
+    ).toThrow(/already used/);
     expect(() =>
       applyCommand(s, { type: 'socketSupport', skillUid: a, index: 1, supportUid: minionSup }),
     ).toThrow(/cannot support/);
+    // Once per character: the same support can't go into another skill either.
+    expect(() =>
+      applyCommand(s, { type: 'socketSupport', skillUid: b, index: 0, supportUid: sup2 }),
+    ).toThrow(/already used/);
     // Moving a support takes it out of its old socket.
     applyCommand(s, { type: 'socketSupport', skillUid: b, index: 0, supportUid: sup });
     expect(s.gems.find((g) => g.uid === a)!.supports[0]).toBeNull();

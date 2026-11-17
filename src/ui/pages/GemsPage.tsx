@@ -158,9 +158,19 @@ function SlotDetails({
 }) {
   const def = CONTENT.gems.get(gem.gemId);
   if (!isSkill(def)) return null;
+  // Once per character: hide other copies of a support that another skill already uses
+  // (the copy in use is still offered, which moves it here).
+  const usedElsewhere = new Map<string, number>();
+  for (const other of state.gems)
+    if (other.uid !== gem.uid)
+      for (const s of other.supports) {
+        const sg = s !== null ? findGem(state, s) : undefined;
+        if (sg) usedElsewhere.set(sg.gemId, sg.uid);
+      }
   const supports = state.gems.filter((g) => {
     const d = CONTENT.gems.get(g.gemId);
-    return isSupport(d) && supportFits(def, d);
+    const used = usedElsewhere.get(g.gemId);
+    return isSupport(d) && supportFits(def, d) && (used === undefined || used === g.uid);
   });
   return (
     <div className="skill-slot-body small">

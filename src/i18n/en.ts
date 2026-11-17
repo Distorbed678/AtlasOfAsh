@@ -682,7 +682,7 @@ export const en = {
 
   'gemcut.title': 'Gemcutting bench',
   'gemcut.intro':
-    'Pick an uncut gem, then choose what to cut it into: any gem of the same kind and tier.',
+    'Pick an uncut gem, then choose what to cut it into: any gem of the same kind, of its tier or lower.',
   'gemcut.none': 'You have no uncut gems. They drop from monsters in combat.',
   'gemcut.locked': 'Requires Gemcutting level {n}',
   'gemcut.cut': 'Cut',

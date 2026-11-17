@@ -23,8 +23,7 @@ export function GemcuttingPanel() {
 
   const kind = itemId ? uncutKind(itemId)! : null;
   const tier = itemId ? uncutTier(itemId) : 0;
-  const need = CUT_LEVEL[tier - 1] ?? 1;
-  const options = kind ? CONTENT.gems.all().filter((g) => g.kind === kind && g.tier === tier) : [];
+  const options = kind ? CONTENT.gems.all().filter((g) => g.kind === kind && g.tier <= tier) : [];
 
   return (
     <section className="panel panel-wide">
@@ -47,36 +46,43 @@ export function GemcuttingPanel() {
               </button>
             ))}
           </div>
-          {level < need && <p className="bad small">{t('gemcut.locked', { n: need })}</p>}
           <div className="card-grid">
-            {options.map((g) => (
-              <div key={g.id} className={`card gem-card gem-${g.kind}`}>
-                <div className="card-head">
-                  <div className="card-title">
-                    <Icon name={gemIcon(g)} size={20} className="inline-icon" /> {nameOf(g.id)}
+            {options.map((g) => {
+              const need = CUT_LEVEL[g.tier - 1] ?? 1;
+              return (
+                <div key={g.id} className={`card gem-card gem-${g.kind}`}>
+                  <div className="card-head">
+                    <div className="card-title">
+                      <Icon name={gemIcon(g)} size={20} className="inline-icon" /> {nameOf(g.id)}
+                    </div>
+                    {owned(g.id) > 0 && (
+                      <span className="tag">{t('gemcut.owned', { n: owned(g.id) })}</span>
+                    )}
                   </div>
-                  {owned(g.id) > 0 && (
-                    <span className="tag">{t('gemcut.owned', { n: owned(g.id) })}</span>
+                  <div className="small dim">
+                    {t('gem.tier', { n: g.tier })} · {gemTags(g)}
+                  </div>
+                  {level < need && (
+                    <div className="bad small">{t('gemcut.locked', { n: need })}</div>
                   )}
+                  <ul className="gem-lines small">
+                    {gemLines(g, 1).map((l, i) => (
+                      <li key={i}>{l}</li>
+                    ))}
+                  </ul>
+                  <button
+                    className="btn btn-primary"
+                    disabled={level < need}
+                    onClick={async () => {
+                      if (await command({ type: 'cutGem', itemId: itemId!, gemId: g.id }))
+                        toast(t('gemcut.done', { name: nameOf(g.id) }), 'success');
+                    }}
+                  >
+                    {t('gemcut.cut')}
+                  </button>
                 </div>
-                <div className="small dim">{gemTags(g)}</div>
-                <ul className="gem-lines small">
-                  {gemLines(g, 1).map((l, i) => (
-                    <li key={i}>{l}</li>
-                  ))}
-                </ul>
-                <button
-                  className="btn btn-primary"
-                  disabled={level < need}
-                  onClick={async () => {
-                    if (await command({ type: 'cutGem', itemId: itemId!, gemId: g.id }))
-                      toast(t('gemcut.done', { name: nameOf(g.id) }), 'success');
-                  }}
-                >
-                  {t('gemcut.cut')}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
