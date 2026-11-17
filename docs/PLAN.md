@@ -175,6 +175,23 @@ All names, lore, classes, items and art are **original**. We borrow *mechanical 
 | Combat UI | Duel view (bars, attack progress, flask charges), combat log, trip bag with bank button, zone panel with predicted kills/h, XP/h, loot/h and death risk |
 | Post-launch tuning | **Gear drops halved** (2.5% per loot roll, ~10–12 pieces/hour early). Character level speed left fast until Phase 7 tunes all acts |
 
+### 1.12 Phase 5 decisions (gems, skills, rotation)
+| Area | Decision |
+|---|---|
+| Gem roster | **Large first set: ~60 skill gems, ~45 support gems, ~12 spirit gems.** All names original |
+| Cutting | Uncut gems become **any gem of their tier or lower, player's choice** (PoE2-style) |
+| Gem levels | Equipped skill gems **and their supports level from combat XP** (PoE1-style). **Every gem caps at level 20**; tiers decide which gems exist |
+| Support slots | Gems start with 2; **Gemcutting opens the 3rd/4th/5th slot at any gem level** (expensive) |
+| Gemcutting | **Instant operations** (like Enchanting) that grant XP: cut, polish quality, open a slot. Gemcutting level gates which tiers you can cut |
+| Quality | Up to 20%, a **per-gem bonus** (e.g. +ignite chance on fire spells), raised by Gemcutting with gem fragments |
+| Skill slots | **5 priority-list slots**, unlocked at character levels 1 / 4 / 12 / 24 / 38. Each slot holds a skill gem (with supports) and a use rule |
+| Mana | Every skill costs mana per use, scaling with gem level; supports multiply cost. Out of mana → next usable skill, falling back to Basic Attack |
+| Spirit | +30 at character levels 10, 30 and 50 (stand-ins until act bosses in Phase 7), plus gear (sceptres, Spirit affixes) and later the tree. Zealots start with 30 |
+| Charges | Endurance / frenzy / power, **max 3 each, 10s**, refreshed when gained. Endurance +4% physical damage reduction and +4% elemental resists each; frenzy +4% speed and +4% more damage each; power +40% increased crit chance each |
+| Combos | Fast skills build combo points (max 8, decay 4s after the last hit); **finishers consume all for +25% more damage per point** |
+| Minions | **Persistent** (reserve Spirit, revive 6s after dying) and **summoned** (mana, timed). Own life and damage, scaled by gem level and minion supports; monsters target by **threat** |
+| Skill types | Attacks (need matching **weapon types**), spells (any weapon), minions, **curses**, **warcries/buffs**, **triggered skills** (cast on crit / when hit) and **guard skills** |
+
 ---
 
 ## 2. Classes
