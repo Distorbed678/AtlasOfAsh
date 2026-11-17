@@ -1,9 +1,10 @@
 import { CONTENT, type Content } from '../content';
-import type { BaseItemDef, EquipSlot } from '../content/types';
+import { FLASK_SLOTS, type BaseItemDef, type EquipSlot } from '../content/types';
 import { computeCharacter, type CharacterSheet } from '../stats/character';
 import type { GameState } from '../state';
 import { equipmentMods } from './itemStats';
 import type { ItemInstance } from './types';
+import { characterLevel } from '../combat/progression';
 
 const ONE_HANDED_OFFHAND_CLASSES = new Set([
   'mace',
@@ -32,13 +33,15 @@ export function slotsFor(base: BaseItemDef): EquipSlot[] {
       return [base.class];
     case 'ring':
       return ['ring1', 'ring2'];
+    case 'flask':
+      return [...FLASK_SLOTS];
     default:
       // Weapons: main hand; one-handed weapons may also be dual-wielded in the off hand.
       return ONE_HANDED_OFFHAND_CLASSES.has(base.class) ? ['mainHand', 'offHand'] : ['mainHand'];
   }
 }
 
-/** The character sheet for this state (level 1 until character levels arrive). */
+/** The character sheet for this state (character level from combat XP, equipped gear). */
 export function sheetFor(
   state: GameState,
   equipment = state.equipment,
@@ -48,7 +51,7 @@ export function sheetFor(
   return computeCharacter(
     {
       classId: state.character.classId,
-      level: 1,
+      level: characterLevel(state.charXp),
       mods: equipmentMods(equipment, labelFor, content),
     },
     content,
@@ -85,6 +88,8 @@ export function equipProblem(
   if (slot === 'mainHand' && base.twoHanded) delete without.offHand;
   const sheet = sheetFor(state, without, undefined, content);
   const have = { str: sheet.str.total, dex: sheet.dex.total, int: sheet.int.total };
+  const level = characterLevel(state.charXp);
+  if (base.levelReq > level) return `Requires level ${base.levelReq} (you are ${level})`;
   for (const a of ['str', 'dex', 'int'] as const) {
     if (base.req[a] > have[a])
       return `Requires ${base.req[a]} ${a.toUpperCase()} (you have ${Math.floor(have[a])})`;

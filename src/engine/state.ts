@@ -1,11 +1,13 @@
 import { SKILL_IDS } from './content';
 import type { SkillId } from './content/types';
 import { deriveSeed, Rng, seedRng, type RngState } from './core/rng';
-import type { EquipSlot } from './content/types';
+import type { BaseClass, EquipSlot, FlaskSlot, ItemCategory } from './content/types';
+import type { MonsterRarity } from './combat/monsterStats';
+import type { Rarity } from './items/types';
 import type { ItemInstance } from './items/types';
 
 /** Bump when the save shape changes, and add a migration in save/migrations.ts. */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export type CharacterMode = 'standard' | 'hardcore' | 'mortal';
 export const CHARACTER_MODES: readonly CharacterMode[] = ['standard', 'hardcore', 'mortal'];
@@ -15,6 +17,107 @@ export interface CharacterInfo {
   name: string;
   classId: string;
   mode: CharacterMode;
+  /** Set when a Hardcore character died and moved to Standard. */
+  fellInHardcore?: boolean;
+}
+
+// ---------------------------------------------------------------- Combat state
+
+export interface Dot {
+  dps: number;
+  until: number;
+}
+
+export interface MonsterInstance {
+  defId: string;
+  rarity: MonsterRarity;
+  mods: string[];
+  level: number;
+  maxLife: number;
+  life: number;
+  nextAt: number;
+  /** Deterministic hit resolution for the monster's attacks. */
+  entropy: number;
+  ignite?: Dot;
+  bleed?: Dot;
+  poison: Dot[];
+  shock?: { pct: number; until: number };
+  chill?: { pct: number; until: number };
+  frozenUntil?: number;
+  freezeBuildup: number;
+}
+
+export interface FlaskState {
+  charges: number;
+  /** Utility flask effect active until. */
+  activeUntil?: number;
+  /** Life/mana flask recovery in progress. */
+  recovery?: { perMs: number; until: number };
+}
+
+export interface TripBag {
+  gold: number;
+  items: Record<string, number>;
+  gear: ItemInstance[];
+}
+
+export const TRIP_BAG_STACKS = 100;
+
+export interface CombatState {
+  zoneId: string;
+  startedAt: number;
+  monster: MonsterInstance;
+  life: number;
+  mana: number;
+  es: number;
+  /** When the player's next attack/spell lands. */
+  playerNextAt: number;
+  playerEntropy: number;
+  lastHitAt: number;
+  leechPool: number;
+  retreatReadyAt: number;
+  flasks: Partial<Record<FlaskSlot, FlaskState>>;
+  tickAt: number;
+  bag: TripBag;
+  lastBankAt: number;
+  kills: number;
+}
+
+export type FlaskRuleMode = 'off' | 'lifeBelow' | 'manaBelow' | 'whenInactive';
+
+export interface FlaskRule {
+  mode: FlaskRuleMode;
+  /** Threshold in % for lifeBelow / manaBelow. */
+  threshold: number;
+}
+
+export interface CombatSettings {
+  /** 'auto' casts Basic Spell when holding a spell weapon and attacks otherwise. */
+  skill: 'auto' | 'attack' | 'spell';
+  flaskRules: Partial<Record<FlaskSlot, FlaskRule>>;
+}
+
+export type FilterAction = 'keep' | 'sell' | 'disenchant' | 'ignore';
+
+export interface FilterRule {
+  id: number;
+  enabled: boolean;
+  /** 'gear' matches equipment, 'material' matches stackable items. */
+  target: 'gear' | 'material';
+  rarities?: Rarity[];
+  classes?: BaseClass[];
+  categories?: ItemCategory[];
+  minTier?: number;
+  maxTier?: number;
+  minIlvl?: number;
+  /** Affix group the gear must have (e.g. 'life'). */
+  hasAffix?: string;
+  action: FilterAction;
+}
+
+export interface LootFilter {
+  rules: FilterRule[];
+  nextId: number;
 }
 
 export interface SkillState {
@@ -84,6 +187,9 @@ export interface GameStats {
   wagesPaid: number;
   goldEarned: number;
   itemsCrafted: number;
+  kills: number;
+  deaths: number;
+  itemsLost: number;
 }
 
 export interface GameState {
@@ -112,6 +218,15 @@ export interface GameState {
   equipment: Partial<Record<EquipSlot, ItemInstance>>;
   /** Next item instance id (deterministic). */
   nextItemUid: number;
+  /** Combat XP (character level derives from it). */
+  charXp: number;
+  combat: CombatState | null;
+  combatSettings: CombatSettings;
+  lootFilter: LootFilter;
+  /** Bumped whenever equipment changes, so cached combat stats are rebuilt. */
+  gearVersion: number;
+  /** Set when a Mortal character dies (the host then deletes the save). */
+  dead?: { at: number; cause: string; level: number };
   /** The most recent Enchanting result (for UI feedback). */
   lastEnchant?: { uid: number; op: string; outcome: string | null };
   stats: GameStats;
@@ -152,6 +267,20 @@ export function createInitialState(
     stash: { tabs: [{ id: 0, name: 'Stash', items: [] }], nextTabId: 1 },
     equipment: {},
     nextItemUid: 1,
+    charXp: 0,
+    combat: null,
+    combatSettings: {
+      skill: 'auto',
+      flaskRules: {
+        flask1: { mode: 'lifeBelow', threshold: 50 },
+        flask2: { mode: 'manaBelow', threshold: 30 },
+        flask3: { mode: 'whenInactive', threshold: 0 },
+        flask4: { mode: 'whenInactive', threshold: 0 },
+        flask5: { mode: 'whenInactive', threshold: 0 },
+      },
+    },
+    lootFilter: { rules: [], nextId: 1 },
+    gearVersion: 0,
     stats: {
       actionsCompleted: 0,
       workerActions: 0,
@@ -160,6 +289,9 @@ export function createInitialState(
       wagesPaid: 0,
       goldEarned: 0,
       itemsCrafted: 0,
+      kills: 0,
+      deaths: 0,
+      itemsLost: 0,
     },
   };
 }

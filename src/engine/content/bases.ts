@@ -1,4 +1,5 @@
 import { BAR_IDS, CLOTH_IDS, CUT_GEM, LEATHER_IDS, MATERIAL_ITEMS, PLANK_IDS } from './materials';
+import { TIER_LEVELS } from './skills';
 import type {
   Attribute,
   BaseClass,
@@ -270,12 +271,12 @@ const priceOf = (inputs: Record<string, number>) =>
   );
 
 function push(
-  def: Omit<BaseItemDef, 'sellPrice'>,
+  def: Omit<BaseItemDef, 'sellPrice' | 'levelReq'>,
   craft: CraftSpec,
   material: 'metal' | 'wood' | 'leather' | 'cloth',
 ) {
   const i = def.tier - 1;
-  BASES.push({ ...def, sellPrice: priceOf(inputsFor(craft, i)) });
+  BASES.push({ ...def, levelReq: TIER_LEVELS[i]!, sellPrice: priceOf(inputsFor(craft, i)) });
   BASE_CRAFT[def.id] = craft;
   BASE_MATERIAL[def.id] = material;
 }

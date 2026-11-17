@@ -52,4 +52,16 @@ export const BUILDINGS: BuildingDef[] = [
       }),
     ),
   },
+  {
+    id: 'building.waystone',
+    effect: 'autoBankMinutes',
+    // 0 = no auto-banking; then every 60, 45, 30, 20, 10, 5 minutes of combat.
+    values: [0, 60, 45, 30, 20, 10, 5],
+    tiers: [...Array(6).keys()].map((i) =>
+      cost(Math.round((2_000 * 3 ** i) / 100) * 100, {
+        [LOG_IDS[i]!]: 100 + 50 * i,
+        [ORE_IDS[i]!]: 100 + 50 * i,
+      }),
+    ),
+  },
 ];

@@ -61,6 +61,11 @@ function normalizeState(raw: RawSave): GameState {
   raw.stash ??= fresh.stash;
   raw.equipment ??= {};
   raw.nextItemUid ??= 1;
+  raw.charXp ??= 0;
+  raw.combat ??= null;
+  raw.combatSettings ??= fresh.combatSettings;
+  raw.lootFilter ??= fresh.lootFilter;
+  raw.gearVersion ??= 0;
   return raw as GameState;
 }
 

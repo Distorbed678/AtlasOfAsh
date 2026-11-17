@@ -3,6 +3,7 @@ import type { CharacterSummary } from '../engine/save/characters';
 import type { BackupInfo } from '../engine/save/saveManager';
 import type { CharacterMode, GameState } from '../engine/state';
 import type { ProgressSummary } from '../engine/summary';
+import type { SimEvent } from '../engine/sim';
 
 export interface NewCharacter {
   name: string;
@@ -33,7 +34,8 @@ export type ToWorker =
 
 export type FromWorker =
   | { type: 'ready'; characters: CharacterSummary[] }
-  | { type: 'snapshot'; state: GameState | null }
+  | { type: 'snapshot'; state: GameState | null; log?: SimEvent[] }
+  | { type: 'characterDied'; name: string; cause: string }
   | { type: 'characters'; characters: CharacterSummary[] }
   | { type: 'catchUpProgress'; done: number; total: number }
   | { type: 'catchUpDone' }

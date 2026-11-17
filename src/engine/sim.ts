@@ -1,6 +1,7 @@
 import { CONTENT, type Content } from './content';
 import type { GameState } from './state';
 import type { SkillId } from './content/types';
+import { combatSystem } from './combat/combatSystem';
 import { skillSystem } from './systems/skillSystem';
 
 /** Something notable that happened during simulation (for logs/notifications). */
@@ -9,7 +10,17 @@ export type SimEvent =
   | { type: 'itemGained'; itemId: string; qty: number; time: number }
   | { type: 'levelUp'; skillId: SkillId; level: number; time: number }
   | { type: 'gearCrafted'; uid: number; time: number }
-  | { type: 'actionStopped'; actionId: string; time: number };
+  | { type: 'actionStopped'; actionId: string; time: number }
+  | { type: 'combatHit'; damage: number; crit: boolean; skill: string; time: number }
+  | { type: 'combatMiss'; time: number }
+  | { type: 'combatTaken'; damage: number; time: number }
+  | { type: 'combatEvade'; time: number }
+  | { type: 'combatBlock'; time: number }
+  | { type: 'combatKill'; monsterId: string; rarity: string; time: number }
+  | { type: 'characterLevelUp'; level: number; time: number }
+  | { type: 'flaskUsed'; slot: string; kind: string; time: number }
+  | { type: 'autoBanked'; time: number }
+  | { type: 'death'; killer: string; time: number };
 
 export interface SimContext {
   readonly content: Content;
@@ -31,7 +42,7 @@ export interface System {
 }
 
 /** Registration order is also the tie-break order for simultaneous events. */
-export const SYSTEMS: readonly System[] = [skillSystem];
+export const SYSTEMS: readonly System[] = [skillSystem, combatSystem];
 
 export interface AdvanceOptions {
   systems?: readonly System[];

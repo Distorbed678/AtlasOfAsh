@@ -2,6 +2,8 @@ import { AFFIXES, ASHEN_AFFIXES } from './affixes';
 import { ARTISAN_ACTIONS, ARTISAN_SKILLS } from './artisan';
 import { BASES } from './bases';
 import { CLASSES } from './classes';
+import { FLASK_ACTIONS, FLASK_AFFIXES, FLASK_BASES } from './flasks';
+import { MONSTER_MODS, MONSTERS, UNCUT_GEMS, ZONES } from './monsters';
 import { MATERIAL_ITEMS, REAGENT_ITEMS } from './materials';
 import { ContentRegistry } from './registry';
 import { SKILL_ACTIONS, SKILL_ITEMS, SKILLS } from './skills';
@@ -16,6 +18,9 @@ import type {
   SkillDef,
   SkillId,
   UniqueDef,
+  MonsterDef,
+  MonsterModDef,
+  ZoneDef,
 } from './types';
 import { UNIQUES } from './uniques';
 
@@ -27,14 +32,26 @@ export const CONTENT = {
     ...SKILL_ITEMS,
     ...MATERIAL_ITEMS,
     ...REAGENT_ITEMS,
+    ...UNCUT_GEMS,
   ]),
-  skills: new ContentRegistry<SkillDef>('skill', [...SKILLS, ...ARTISAN_SKILLS]),
-  actions: new ContentRegistry<ActionDef>('action', [...SKILL_ACTIONS, ...ARTISAN_ACTIONS]),
+  skills: new ContentRegistry<SkillDef>('skill', [
+    ...SKILLS,
+    ...ARTISAN_SKILLS,
+    { id: 'skill.alchemy', kind: 'artisan', rareFinds: [] },
+  ]),
+  actions: new ContentRegistry<ActionDef>('action', [
+    ...SKILL_ACTIONS,
+    ...ARTISAN_ACTIONS,
+    ...FLASK_ACTIONS,
+  ]),
   classes: new ContentRegistry<ClassDef>('class', CLASSES),
   buildings: new ContentRegistry<BuildingDef>('building', BUILDINGS),
-  bases: new ContentRegistry<BaseItemDef>('base', BASES),
-  affixes: new ContentRegistry<AffixDef>('affix', [...AFFIXES, ...ASHEN_AFFIXES]),
+  bases: new ContentRegistry<BaseItemDef>('base', [...BASES, ...FLASK_BASES]),
+  affixes: new ContentRegistry<AffixDef>('affix', [...AFFIXES, ...FLASK_AFFIXES, ...ASHEN_AFFIXES]),
   uniques: new ContentRegistry<UniqueDef>('unique', UNIQUES),
+  monsters: new ContentRegistry<MonsterDef>('monster', MONSTERS),
+  monsterMods: new ContentRegistry<MonsterModDef>('monstermod', MONSTER_MODS),
+  zones: new ContentRegistry<ZoneDef>('zone', ZONES),
 } as const;
 
 export type Content = typeof CONTENT;

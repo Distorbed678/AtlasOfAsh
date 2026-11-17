@@ -1,4 +1,5 @@
 import { SKILL_IDS } from '../content';
+import { characterLevel } from '../combat/progression';
 import { levelForXp } from '../skills/xp';
 import type { CharacterMode, GameState } from '../state';
 import type { SaveStore } from './store';
@@ -12,6 +13,10 @@ export interface CharacterSummary {
   createdAt: number;
   lastPlayed: number;
   totalLevel: number;
+  level: number;
+  fellInHardcore?: boolean;
+  /** Mortal characters that died: the save is gone, this record remains. */
+  memorial?: { cause: string; level: number; at: number; playedMs: number };
 }
 
 const INDEX_KEY = 'characters:index';
@@ -22,6 +27,8 @@ export function summarizeCharacter(state: GameState, lastPlayed: number): Charac
     createdAt: state.createdAt,
     lastPlayed,
     totalLevel: SKILL_IDS.reduce((sum, id) => sum + levelForXp(state.skills[id].xp), 0),
+    level: characterLevel(state.charXp),
+    fellInHardcore: state.character.fellInHardcore,
   };
 }
 
